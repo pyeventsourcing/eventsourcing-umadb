@@ -33,6 +33,9 @@ jobs:
       - name: Run tests
         run: make test
 
+      - name: Benchmark UmaDB
+        run: TEST_BENCHMARK_NUM_ITERS=20 make benchmark-umadb
+
       - name: Stop UmaDB
         run: make stop-umadb
 

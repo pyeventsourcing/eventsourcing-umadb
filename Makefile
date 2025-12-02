@@ -53,6 +53,9 @@ fmt: fmt-black fmt-isort
 test:
 	$(POETRY) run python -m unittest discover tests -v
 
+.PHONY: benchmark-umadb
+benchmark-umadb:
+	TEST_BENCHMARK_NUM_ITERS=20 $(POETRY) run python -m unittest tests.test_umadb.TestUmaDBClient
 
 .PHONY: build
 build:

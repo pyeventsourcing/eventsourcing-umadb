@@ -71,5 +71,3 @@ start-umadb:
 .PHONY: stop-umadb
 stop-umadb:
 	docker stop my-umadb
-	rm /tmp/eventsourcing-umadb-data/uma.db
-	rmdir /tmp/eventsourcing-umadb-data

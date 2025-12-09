@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from timeit import timeit
 from typing import cast
+from unittest import TestCase
 from uuid import uuid4
 
+from eventsourcing.dcb.tests import DCBRecorderTestCase
 from eventsourcing.persistence import (
     AggregateRecorder,
     ApplicationRecorder,
@@ -18,15 +20,18 @@ from umadb import AppendCondition, Client, Event, Query, QueryItem
 from eventsourcing_umadb.recorders import (
     UmaDBAggregateRecorder,
     UmaDBApplicationRecorder,
+    UmaDBDCBRecorder,
 )
 
 DEFAULT_LOCAL_UMADB_URI = "http://127.0.0.1:50051"
 
 
-class TestUmaDBAggregateRecorder(AggregateRecorderTestCase):
+class WithUmaDB(TestCase):
     def setUp(self) -> None:
         self.umadb = Client(DEFAULT_LOCAL_UMADB_URI)
 
+
+class TestUmaDBAggregateRecorder(AggregateRecorderTestCase, WithUmaDB):
     def create_recorder(self) -> AggregateRecorder:
         return UmaDBAggregateRecorder(umadb=self.umadb)
 
@@ -90,11 +95,8 @@ class TestUmaDBAggregateRecorder(AggregateRecorderTestCase):
     #         )
 
 
-class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
+class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase, WithUmaDB):
     INITIAL_VERSION = 0
-
-    def setUp(self) -> None:
-        self.umadb = Client(DEFAULT_LOCAL_UMADB_URI)
 
     def create_recorder(self) -> ApplicationRecorder:
         return UmaDBApplicationRecorder(umadb=self.umadb)
@@ -110,7 +112,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
     def super_test_insert_select(
         self, start_notification_id: int | None = None
     ) -> None:
-        from eventsourcing.tests.persistence import convert_notification_originator_ids
 
         start = start_notification_id or 0
 
@@ -174,7 +175,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
             recorder.insert_events([stored_event3])
 
         notifications = recorder.select_notifications(start=start + 1, limit=10)
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 3)
         self.assertEqual(notifications[0].id, start + 1)
         self.assertEqual(notifications[0].originator_id, originator_id1)
@@ -190,7 +190,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
         self.assertEqual(notifications[2].state, b"state3")
 
         notifications = recorder.select_notifications(start=start + 1, limit=10)
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 3)
         self.assertEqual(notifications[0].id, start + 1)
         self.assertEqual(notifications[0].originator_id, originator_id1)
@@ -208,7 +207,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
         notifications = recorder.select_notifications(
             start=start + 1, stop=start + 2, limit=10
         )
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 2)
         self.assertEqual(notifications[0].id, start + 1)
         self.assertEqual(notifications[0].originator_id, originator_id1)
@@ -222,7 +220,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
         notifications = recorder.select_notifications(
             start=start + 1, limit=10, inclusive_of_start=False
         )
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 2)
         self.assertEqual(notifications[0].id, start + 2)
         self.assertEqual(notifications[0].originator_id, originator_id1)
@@ -236,7 +233,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
         notifications = recorder.select_notifications(
             start=start + 2, limit=10, inclusive_of_start=False
         )
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 1)
         self.assertEqual(notifications[0].id, start + 3)
         self.assertEqual(notifications[0].originator_id, originator_id2)
@@ -246,7 +242,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
         notifications = recorder.select_notifications(
             start=start + 1, limit=10, topics=["topic1", "topic2", "topic3"]
         )
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 3)
         self.assertEqual(notifications[0].id, start + 1)
         self.assertEqual(notifications[0].originator_id, originator_id1)
@@ -262,7 +257,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
         self.assertEqual(notifications[2].state, b"state3")
 
         notifications = recorder.select_notifications(start + 1, 10, topics=["topic1"])
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 1)
         self.assertEqual(notifications[0].id, start + 1)
         self.assertEqual(notifications[0].originator_id, originator_id1)
@@ -270,7 +264,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
         self.assertEqual(notifications[0].state, b"state1")
 
         notifications = recorder.select_notifications(start + 1, 3, topics=["topic2"])
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 1)
         self.assertEqual(notifications[0].id, start + 2)
         self.assertEqual(notifications[0].originator_id, originator_id1)
@@ -278,7 +271,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
         self.assertEqual(notifications[0].state, b"state2")
 
         notifications = recorder.select_notifications(start + 1, 3, topics=["topic3"])
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 1)
         self.assertEqual(notifications[0].id, start + 3)
         self.assertEqual(notifications[0].originator_id, originator_id2)
@@ -288,7 +280,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
         notifications = recorder.select_notifications(
             start + 1, 3, topics=["topic1", "topic3"]
         )
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 2)
         self.assertEqual(notifications[0].id, start + 1)
         self.assertEqual(notifications[0].originator_id, originator_id1)
@@ -302,48 +293,40 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
 
         # Check limit is working
         notifications = recorder.select_notifications(start + 1, 1)
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 1)
         self.assertEqual(notifications[0].id, start + 1)
 
         notifications = recorder.select_notifications(start + 2, 1)
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 1)
         self.assertEqual(notifications[0].id, start + 2)
 
         notifications = recorder.select_notifications(
             start + 1, 1, inclusive_of_start=False
         )
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 1)
         self.assertEqual(notifications[0].id, start + 2)
 
         notifications = recorder.select_notifications(start + 2, 2)
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 2)
         self.assertEqual(notifications[0].id, start + 2)
         self.assertEqual(notifications[1].id, start + 3)
 
         notifications = recorder.select_notifications(start + 3, 1)
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 1)
         self.assertEqual(notifications[0].id, start + 3)
 
         notifications = recorder.select_notifications(
             start + 3, 1, inclusive_of_start=False
         )
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 0)
 
         notifications = recorder.select_notifications(start=start + 2, limit=10, stop=2)
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 1)
         self.assertEqual(notifications[0].id, start + 2)
 
         notifications = recorder.select_notifications(
             start=start + 1, limit=10, stop=start + 2
         )
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 2, len(notifications))
         self.assertEqual(notifications[0].id, start + 1)
         self.assertEqual(notifications[1].id, start + 2)
@@ -351,15 +334,27 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase):
         notifications = recorder.select_notifications(
             start=start + 1, limit=10, stop=start + 2, inclusive_of_start=False
         )
-        notifications = convert_notification_originator_ids(notifications)
         self.assertEqual(len(notifications), 1, len(notifications))
         self.assertEqual(notifications[0].id, start + 2)
 
-    def test_concurrent_no_conflicts(self) -> None:
-        super().test_concurrent_no_conflicts()
+    def test_concurrent_no_conflicts(self, initial_position: int = 0) -> None:
+        super().test_concurrent_no_conflicts(self.umadb.head() or 0)
 
     def test_concurrent_throughput(self) -> None:
         super().test_concurrent_throughput()
+
+    def test_insert_subscribe(self) -> None:
+        super().optional_test_insert_subscribe(self.umadb.head() or 0)
+
+
+class TestUmaDBDCBRecorder(DCBRecorderTestCase, WithUmaDB):
+    def test_append_read(self) -> None:
+        recorder = UmaDBDCBRecorder(self.umadb)
+        self._test_append_read(recorder, self.umadb.head() or 0)
+
+    def test_append_subscribe(self) -> None:
+        recorder = UmaDBDCBRecorder(self.umadb)
+        self._test_append_subscribe(recorder, self.umadb.head() or 0)
 
 
 del AggregateRecorderTestCase

@@ -113,7 +113,7 @@ Reformat the code.
 
     $ make fmt
 
-Tests belong in `./tests`. Code-under-test belongs in `./Client`.
+Tests belong in `./tests`.
 
 Edit package dependencies in `pyproject.toml`. Update installed packages (and the
 `poetry.lock` file) using the following command.

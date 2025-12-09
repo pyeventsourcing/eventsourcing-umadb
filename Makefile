@@ -55,7 +55,7 @@ test:
 
 .PHONY: benchmark-umadb
 benchmark-umadb:
-	TEST_BENCHMARK_NUM_ITERS=20 $(POETRY) run python -m unittest tests.test_umadb.TestUmaDBClient
+	TEST_BENCHMARK_NUM_ITERS=30 $(POETRY) run python -m unittest tests.test_umadb.TestUmaDBClient
 
 .PHONY: build
 build:

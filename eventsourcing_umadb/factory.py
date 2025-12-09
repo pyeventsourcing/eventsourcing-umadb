@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 from typing import Any
 
+from eventsourcing.dcb.api import DCBRecorder
+from eventsourcing.dcb.persistence import DCBInfrastructureFactory
 from eventsourcing.persistence import (
     AggregateRecorder,
     ApplicationRecorder,
+    BaseInfrastructureFactory,
     InfrastructureFactory,
     ProcessRecorder,
     TrackingRecorder,
@@ -14,14 +17,11 @@ from umadb import Client
 from eventsourcing_umadb.recorders import (
     UmaDBAggregateRecorder,
     UmaDBApplicationRecorder,
+    UmaDBDCBRecorder,
 )
 
 
-class Factory(InfrastructureFactory[TrackingRecorder]):
-    """
-    Infrastructure factory for UmaDB infrastructure.
-    """
-
+class BaseUmaDBFactory(BaseInfrastructureFactory[TrackingRecorder]):
     UMADB_URI = "UMADB_URI"
 
     def __init__(self, env: Environment):
@@ -34,6 +34,16 @@ class Factory(InfrastructureFactory[TrackingRecorder]):
                 f"'{', '.join(self.env.create_keys(self.UMADB_URI))}'"
             )
         self.umadb = Client(url=uri)
+
+    def __del__(self) -> None:
+        if hasattr(self, "umadb"):
+            del self.umadb
+
+
+class Factory(BaseUmaDBFactory, InfrastructureFactory):
+    """
+    Infrastructure factory for UmaDB infrastructure.
+    """
 
     def aggregate_recorder(self, purpose: str = "events") -> AggregateRecorder:
         return UmaDBAggregateRecorder(
@@ -51,6 +61,7 @@ class Factory(InfrastructureFactory[TrackingRecorder]):
     ) -> TrackingRecorder:
         raise NotImplementedError()
 
-    def __del__(self) -> None:
-        if hasattr(self, "umadb"):
-            del self.umadb
+
+class DCBFactory(BaseUmaDBFactory, DCBInfrastructureFactory[TrackingRecorder]):
+    def dcb_event_store(self) -> DCBRecorder:
+        return UmaDBDCBRecorder(self.umadb)

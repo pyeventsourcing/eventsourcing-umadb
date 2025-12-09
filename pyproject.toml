@@ -28,15 +28,15 @@ repository = "https://github.com/pyeventsourcing/eventsourcing-umadb"
 include = ["eventsourcing_umadb/py.typed"]
 
 dependencies = [
-    "eventsourcing>=9.4.6",
-    "umadb>=0.1",
+    "eventsourcing>=9.5.0a2",
+    "umadb>=0.1.30",
 ]
 
 [tool.poetry.group.dev.dependencies]
 black = { version = "*", allow-prereleases = true }
 isort = "*"
 mypy = "*"
-eventsourcing = { version = "~9.4.6", extras = ["crypto"]}
+eventsourcing = { version = "9.5.0a2", extras = ["crypto"]}
 types-protobuf = "*"
 
 [tool.black]

@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import Any, Iterator, List, Optional, Sequence, cast
+from typing import Any, List, Optional, Sequence, cast
 from uuid import UUID, uuid4
 
 import umadb
+from eventsourcing.dcb.api import (
+    DCBAppendCondition,
+    DCBEvent,
+    DCBQuery,
+    DCBReadResponse,
+    DCBRecorder,
+    DCBSequencedEvent,
+    DCBSubscription,
+)
 from eventsourcing.persistence import (
     AggregateRecorder,
     ApplicationRecorder,
@@ -13,13 +22,12 @@ from eventsourcing.persistence import (
     StoredEvent,
     Subscription,
 )
-from umadb import AppendCondition, Client, Event, Query, QueryItem, SequencedEvent
 
 
 class UmaDBAggregateRecorder(AggregateRecorder):
     def __init__(
         self,
-        umadb: Client,
+        umadb: umadb.Client,
         for_snapshotting: bool = False,
         *args: Any,
         **kwargs: Any,
@@ -42,7 +50,7 @@ class UmaDBAggregateRecorder(AggregateRecorder):
         # print("Inserting events")
         # for stored_event in stored_events:
         #     print(" - {}, {}".format(stored_event.originator_id, stored_event.originator_version))
-        umadb_events: List[Event] = []
+        umadb_events: List[umadb.Event] = []
         if len(stored_events) == 0:
             return None
         originator_ids_and_versions: dict[UUID | str, int] = dict()
@@ -62,7 +70,7 @@ class UmaDBAggregateRecorder(AggregateRecorder):
             originator_version_tag = self._tag_originator_version(
                 stored_event.originator_id, stored_event.originator_version
             )
-            umadb_event = Event(
+            umadb_event = umadb.Event(
                 event_type=stored_event.topic,
                 data=stored_event.state,
                 tags=[originator_id_tag, originator_version_tag],
@@ -71,7 +79,7 @@ class UmaDBAggregateRecorder(AggregateRecorder):
             umadb_events.append(umadb_event)
         try:
             query_items = [
-                QueryItem(
+                umadb.QueryItem(
                     tags=umadb_event.tags,
                 )
                 for umadb_event in umadb_events
@@ -79,8 +87,8 @@ class UmaDBAggregateRecorder(AggregateRecorder):
             # print("Query items:", query_items)
             sequence_number = self.umadb.append(
                 events=umadb_events,
-                condition=AppendCondition(
-                    fail_if_events_match=Query(
+                condition=umadb.AppendCondition(
+                    fail_if_events_match=umadb.Query(
                         items=query_items,
                     ),
                 ),
@@ -112,8 +120,8 @@ class UmaDBAggregateRecorder(AggregateRecorder):
         if self.for_snapshotting and desc and limit == 1:
             return []
         umadb_events = self.umadb.read(
-            query=Query(
-                items=[QueryItem(tags=[self._tag_originator_id(originator_id)])]
+            query=umadb.Query(
+                items=[umadb.QueryItem(tags=[self._tag_originator_id(originator_id)])]
             ),
             backwards=desc,
         )
@@ -146,11 +154,15 @@ class UmaDBAggregateRecorder(AggregateRecorder):
             )
         return stored_events
 
-    def _extract_originator_version(self, ue: SequencedEvent) -> int:
+    def _extract_originator_version(self, ue: umadb.SequencedEvent) -> int:
         return int(ue.event.tags[1].split(":")[1])
 
-    def _extract_originator_id(self, ue: SequencedEvent) -> UUID:
-        return UUID(ue.event.tags[0].split(":")[1])
+    def _extract_originator_id(self, ue: umadb.SequencedEvent) -> UUID:
+        try:
+            return UUID(ue.event.tags[0].split(":")[1])
+        except IndexError as e:
+            msg = f"Couldn't extract originator ID from: {ue.event.tags[0]}"
+            raise ValueError(msg) from e
 
 
 class UmaDBApplicationRecorder(UmaDBAggregateRecorder, ApplicationRecorder):
@@ -176,18 +188,12 @@ class UmaDBApplicationRecorder(UmaDBAggregateRecorder, ApplicationRecorder):
         ues = self.umadb.read(
             start=start,
             limit=limit,
-            query=Query(items=[QueryItem(types=topics)]),
+            query=umadb.Query(items=[umadb.QueryItem(types=topics)]),
         )
         notifications: List[Notification] = []
         count = 0
         for ue in ues:
-            notification = Notification(
-                id=ue.position,
-                originator_id=self._extract_originator_id(ue),
-                originator_version=self._extract_originator_version(ue),
-                topic=ue.event.event_type,
-                state=ue.event.data,
-            )
+            notification = self.construct_notification(ue)
             notifications.append(notification)
             count += 1
 
@@ -196,7 +202,173 @@ class UmaDBApplicationRecorder(UmaDBAggregateRecorder, ApplicationRecorder):
 
         return notifications
 
+    def construct_notification(self, ue: umadb.SequencedEvent) -> Notification:
+        return Notification(
+            id=ue.position,
+            originator_id=self._extract_originator_id(ue),
+            originator_version=self._extract_originator_version(ue),
+            topic=ue.event.event_type,
+            state=ue.event.data,
+        )
+
     def subscribe(
         self, gt: int | None = None, topics: Sequence[str] = ()
-    ) -> Subscription[ApplicationRecorder]:
-        raise NotImplementedError()
+    ) -> Subscription[UmaDBApplicationRecorder]:
+        return UmaDBSubscription(
+            recorder=self,
+            gt=gt,
+            topics=topics,
+        )
+
+
+class UmaDBSubscription(Subscription[UmaDBApplicationRecorder]):
+    def __init__(
+        self,
+        recorder: UmaDBApplicationRecorder,
+        gt: int | None = None,
+        topics: Sequence[str] = (),
+    ) -> None:
+        super().__init__(recorder=recorder, gt=gt, topics=topics)
+        self._read_response = recorder.umadb.read(
+            query=umadb.Query(items=[umadb.QueryItem(types=topics)]),
+            start=gt + 1 if isinstance(gt, int) else None,
+            subscribe=True,
+        )
+
+    def __next__(self) -> Notification:
+        if self._has_been_stopped:
+            raise StopIteration
+        return self._recorder.construct_notification(next(self._read_response))
+
+
+class UmaDBDCBRecorder(DCBRecorder):
+    def __init__(self, umadb: umadb.Client):
+        self.umadb = umadb
+
+    def append(
+        self, events: Sequence[DCBEvent], condition: DCBAppendCondition | None = None
+    ) -> int:
+        try:
+            return self.umadb.append(
+                events=[
+                    umadb.Event(
+                        event_type=e.type,
+                        data=e.data,
+                        tags=e.tags,
+                        uuid=str(uuid4()),
+                    )
+                    for e in events
+                ],
+                condition=(
+                    umadb.AppendCondition(
+                        fail_if_events_match=umadb.Query(
+                            items=[
+                                umadb.QueryItem(
+                                    types=qi.types,
+                                    tags=qi.tags,
+                                )
+                                for qi in condition.fail_if_events_match.items
+                            ],
+                        ),
+                        after=condition.after,
+                    )
+                    if condition
+                    else None
+                ),
+            )
+        except umadb.IntegrityError as exc:
+            raise IntegrityError(exc)
+
+    def read(
+        self,
+        query: DCBQuery | None = None,
+        *,
+        after: int | None = None,
+        limit: int | None = None,
+    ) -> DCBReadResponse:
+        r = self.umadb.read(
+            (
+                umadb.Query(
+                    items=[
+                        umadb.QueryItem(
+                            types=qi.types,
+                            tags=qi.tags,
+                        )
+                        for qi in query.items
+                    ],
+                )
+                if query
+                else None
+            ),
+            start=after + 1 if after else None,
+            limit=limit,
+        )
+        return UmaDBDCBReadResponse(r)
+
+    def subscribe(
+        self,
+        query: DCBQuery | None = None,
+        *,
+        after: int | None = None,
+    ) -> DCBSubscription:
+        return UmaDBDCBSubscription(
+            recorder=self,
+            query=query,
+            after=after,
+        )
+
+
+class UmaDBDCBReadResponse(DCBReadResponse):
+    def __init__(self, read_response: umadb.ReadResponse) -> None:
+        self.read_response = read_response
+
+    @property
+    def head(self) -> int | None:
+        return self.read_response.head()
+
+    def __next__(self) -> DCBSequencedEvent:
+        sequenced_event = next(self.read_response)
+        return DCBSequencedEvent(
+            position=sequenced_event.position,
+            event=DCBEvent(
+                type=sequenced_event.event.event_type,
+                data=sequenced_event.event.data,
+                tags=sequenced_event.event.tags,
+            ),
+        )
+
+
+class UmaDBDCBSubscription(DCBSubscription):
+    def __init__(
+        self,
+        recorder: DCBRecorder,
+        query: DCBQuery | None = None,
+        after: int | None = None,
+    ) -> None:
+        super().__init__(
+            recorder=recorder,
+            query=query,
+            after=after,
+        )
+        self._read_response = UmaDBDCBReadResponse(
+            cast(UmaDBDCBRecorder, self._recorder).umadb.read(
+                (
+                    umadb.Query(
+                        items=[
+                            umadb.QueryItem(
+                                types=qi.types,
+                                tags=qi.tags,
+                            )
+                            for qi in query.items
+                        ],
+                    )
+                    if query
+                    else None
+                ),
+                start=after + 1 if after else None,
+                subscribe=True,
+            )
+        )
+
+    def __next__(self) -> DCBSequencedEvent:
+        return next(self._read_response)

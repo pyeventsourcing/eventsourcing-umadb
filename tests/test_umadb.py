@@ -19,7 +19,7 @@ class TestUmaDBClient(unittest.TestCase):
     def _generate_tag(self) -> str:
         return "foo" + str(uuid4()) + ":" + "bar"
 
-    @skipIf("TEST_BENCHMARK_NUM_ITERS" not in os.environ, "Don't mess up the tags")
+    # @skipIf("TEST_BENCHMARK_NUM_ITERS" not in os.environ, "Don't mess up the tags")
     def test_benchmark_dcb_append(self) -> None:
         # Just for comparison with Axon Server.
         client = Client("http://127.0.0.1:50051")

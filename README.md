@@ -2,7 +2,7 @@
 
 This package supports using the Python
 [eventsourcing](https://github.com/pyeventsourcing/eventsourcing) library
-with [UmaDB](https://umadb.io).
+with [UmaDB](https://pypi.org/project/umadb/).
 
 ## Installation
 

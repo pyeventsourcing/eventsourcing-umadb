@@ -63,5 +63,5 @@ class Factory(BaseUmaDBFactory, InfrastructureFactory):
 
 
 class DCBFactory(BaseUmaDBFactory, DCBInfrastructureFactory[TrackingRecorder]):
-    def dcb_event_store(self) -> DCBRecorder:
+    def dcb_recorder(self) -> DCBRecorder:
         return UmaDBDCBRecorder(self.umadb)

@@ -28,7 +28,7 @@ repository = "https://github.com/pyeventsourcing/eventsourcing-umadb"
 include = ["eventsourcing_umadb/py.typed"]
 
 dependencies = [
-    "eventsourcing>=9.5.0a2",
+    "eventsourcing>=9.5.0a3",
     "umadb>=0.1.30",
 ]
 

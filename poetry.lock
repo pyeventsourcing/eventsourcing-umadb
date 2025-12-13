@@ -83,14 +83,14 @@ files = [
 
 [[package]]
 name = "eventsourcing"
-version = "9.5.0a2"
+version = "9.5.0a3"
 description = "Event sourcing in Python"
 optional = false
 python-versions = ">=3.10.0"
 groups = ["main", "dev"]
 files = [
-    {file = "eventsourcing-9.5.0a2-py3-none-any.whl", hash = "sha256:7ba54dc14a4f19fc320d0aba7eecc25499d033b9943f91cacd7fbcd990be4030"},
-    {file = "eventsourcing-9.5.0a2.tar.gz", hash = "sha256:e29976d6c04684d5b0c464f381133394877422a5b9525dad7b9337f280e88c1c"},
+    {file = "eventsourcing-9.5.0a3-py3-none-any.whl", hash = "sha256:247a499e98d675486dd391a30752dc740594d3b07ee9952df8b19cff06aac6c9"},
+    {file = "eventsourcing-9.5.0a3.tar.gz", hash = "sha256:8fb11972c2c250aa35d77035f73ff544e1c6349da04f3e0fc725f027d5d13d01"},
 ]
 
 [package.dependencies]
@@ -440,14 +440,14 @@ files = [
 
 [[package]]
 name = "types-protobuf"
-version = "6.32.1.20251105"
+version = "6.32.1.20251210"
 description = "Typing stubs for protobuf"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "types_protobuf-6.32.1.20251105-py3-none-any.whl", hash = "sha256:a15109d38f7cfefd2539ef86d3f93a6a41c7cad53924f8aa1a51eaddbb72a660"},
-    {file = "types_protobuf-6.32.1.20251105.tar.gz", hash = "sha256:641002611ff87dd9fedc38a39a29cacb9907ae5ce61489b53e99ca2074bef764"},
+    {file = "types_protobuf-6.32.1.20251210-py3-none-any.whl", hash = "sha256:2641f78f3696822a048cfb8d0ff42ccd85c25f12f871fbebe86da63793692140"},
+    {file = "types_protobuf-6.32.1.20251210.tar.gz", hash = "sha256:c698bb3f020274b1a2798ae09dc773728ce3f75209a35187bd11916ebfde6763"},
 ]
 
 [[package]]
@@ -484,4 +484,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "f6368389cc09b043f7b66e3f3da5e2fb2203c8586ad9a160a73d5f4a3c8fb564"
+content-hash = "6d6da57549dc8bdb980c679d58624bf09b7ed13f6461166964925e69aa82daeb"

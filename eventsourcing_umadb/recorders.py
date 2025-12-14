@@ -310,7 +310,7 @@ class UmaDBDCBRecorder(DCBRecorder):
         query: DCBQuery | None = None,
         *,
         after: int | None = None,
-    ) -> DCBSubscription:
+    ) -> UmaDBDCBSubscription:
         return UmaDBDCBSubscription(
             recorder=self,
             query=query,
@@ -338,10 +338,10 @@ class UmaDBDCBReadResponse(DCBReadResponse):
         )
 
 
-class UmaDBDCBSubscription(DCBSubscription):
+class UmaDBDCBSubscription(DCBSubscription[UmaDBDCBRecorder]):
     def __init__(
         self,
-        recorder: DCBRecorder,
+        recorder: UmaDBDCBRecorder,
         query: DCBQuery | None = None,
         after: int | None = None,
     ) -> None:
@@ -351,7 +351,7 @@ class UmaDBDCBSubscription(DCBSubscription):
             after=after,
         )
         self._read_response = UmaDBDCBReadResponse(
-            cast(UmaDBDCBRecorder, self._recorder).umadb.read(
+            self._recorder.umadb.read(
                 (
                     umadb.Query(
                         items=[

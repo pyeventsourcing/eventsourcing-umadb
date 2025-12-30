@@ -38,6 +38,7 @@ isort = "*"
 mypy = "*"
 eventsourcing = { version = ">=9.5.0", extras = ["crypto"]}
 types-protobuf = "*"
+msgspec = "*"
 
 [tool.black]
 line-length = 88

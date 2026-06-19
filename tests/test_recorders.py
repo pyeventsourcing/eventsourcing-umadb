@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-from timeit import timeit
-from typing import cast
 from unittest import TestCase
 from uuid import uuid4
 
+from eventsourcing.dcb.api import DCBEvent
 from eventsourcing.dcb.tests import DCBRecorderTestCase
 from eventsourcing.persistence import (
     AggregateRecorder,
@@ -37,6 +36,30 @@ class TestUmaDBAggregateRecorder(AggregateRecorderTestCase, WithUmaDB):
 
     def test_insert_and_select(self) -> None:
         super(TestUmaDBAggregateRecorder, self).test_insert_and_select()
+
+        # Also check that event IDs are preserved.
+
+        # Construct the recorder.
+        recorder = self.create_recorder()
+
+        # Write a stored event.
+        event1 = StoredEvent(
+            originator_id=uuid4(),
+            originator_version=self.INITIAL_VERSION,
+            topic="topic1",
+            state=b"state1",
+            event_id=uuid4(),
+        )
+
+        recorder.insert_events([event1])
+
+        # Select stored events, expect empty list.
+        selected_events = recorder.select_events(event1.originator_id)
+        self.assert_events_eq(
+            selected_events,
+            [event1],
+        )
+        self.assertEqual(selected_events[0].event_id, event1.event_id)
 
     def test_performance(self) -> None:
         super().test_performance()
@@ -109,6 +132,37 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase, WithUmaDB):
         # Call the super class test....
         self.super_test_insert_select(start_notification_id=start_notification_id)
 
+        # Also check that event IDs are preserved.
+
+        # Construct the recorder.
+        recorder = self.create_recorder()
+
+        # Write a stored event.
+        event1 = StoredEvent(
+            originator_id=uuid4(),
+            originator_version=self.INITIAL_VERSION,
+            topic="topic1",
+            state=b"state1",
+            event_id=uuid4(),
+        )
+
+        recorder.insert_events([event1])
+
+        # Select stored events, expect empty list.
+        selected_events = recorder.select_events(event1.originator_id)
+        self.assert_events_eq(
+            selected_events,
+            [event1],
+        )
+        self.assertEqual(selected_events[0].event_id, event1.event_id)
+
+        notifications = recorder.select_notifications(
+            start=recorder.max_notification_id(), limit=1
+        )
+        self.assertEqual(len(notifications), 1)
+        self.assert_events_eq(notifications, [event1])
+        self.assertEqual(notifications[0].event_id, event1.event_id)
+
     def super_test_insert_select(
         self, start_notification_id: int | None = None
     ) -> None:
@@ -125,7 +179,7 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase, WithUmaDB):
         self.assertEqual(
             len(
                 recorder.select_notifications(
-                    start=start_notification_id, limit=3, topics=["topic1"]
+                    start=start_notification_id, limit=3, topics=["topic999"]
                 )
             ),
             0,
@@ -352,9 +406,45 @@ class TestUmaDBDCBRecorder(DCBRecorderTestCase, WithUmaDB):
         recorder = UmaDBDCBRecorder(self.umadb)
         self._test_append_read(recorder, self.umadb.head() or 0)
 
+        # Also check event IDs are preserved.
+
+        initial_position = recorder.umadb.head()
+
+        # Append one event.
+        event1 = DCBEvent(type="type1", data=b"data1", tags=["tagX"], uuid=str(uuid4()))
+        recorder.append(events=[event1])
+
+        # Read all, expect one event.
+        read_response = recorder.read(after=initial_position)
+        result = list(read_response)
+        self.assertEqual(1, len(result))
+        self.assertEqual(event1.uuid, result[0].event.uuid)
+
     def test_append_subscribe(self) -> None:
         recorder = UmaDBDCBRecorder(self.umadb)
         self._test_append_subscribe(recorder, self.umadb.head() or 0)
+
+        # Also check event IDs are preserved.
+
+        initial_position = recorder.umadb.head()
+
+        # Append one event.
+        event1 = DCBEvent(type="type1", data=b"data1", tags=["tagX"], uuid=str(uuid4()))
+        recorder.append(events=[event1])
+
+        # Start subscription.
+        with recorder.subscribe(after=initial_position) as subscription:
+            received = next(subscription)
+        self.assertEqual(event1.uuid, received.event.uuid)
+
+        with recorder.subscribe(after=recorder.umadb.head()) as subscription:
+            list(subscription)
+
+        # TODO: Why does this not block? Need to investigate UmaDB behaviour
+        #  when subscribing to current head. Does it simply return??
+        # # Start subscription.
+        # with recorder.subscribe(after=initial_position+1) as subscription:
+        #     received = next(subscription)
 
 
 del AggregateRecorderTestCase

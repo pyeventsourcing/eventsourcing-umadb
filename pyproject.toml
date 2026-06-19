@@ -11,10 +11,9 @@ authors = [
 ]
 license = "BSD 3-Clause"
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "License :: OSI Approved :: BSD License",
      "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -22,13 +21,13 @@ classifiers = [
     "Programming Language :: Python",
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 homepage = "https://github.com/pyeventsourcing/eventsourcing-umadb"
 repository = "https://github.com/pyeventsourcing/eventsourcing-umadb"
 include = ["eventsourcing_umadb/py.typed"]
 
 dependencies = [
-    "eventsourcing>=9.5.0",
+    "eventsourcing>=9.6.0b1",
     "umadb>=0.2.0",
 ]
 
@@ -36,13 +35,13 @@ dependencies = [
 black = { version = "*", allow-prereleases = true }
 isort = "*"
 mypy = "*"
-eventsourcing = { version = ">=9.5.0", extras = ["crypto"]}
+eventsourcing = { version = ">=9.6.0b1", extras = ["crypto"]}
 types-protobuf = "*"
 msgspec = "*"
 
 [tool.black]
 line-length = 88
-target-version = ["py310"]
+target-version = ["py311"]
 include = '\.pyi?$'
 preview = true
 exclude = '''

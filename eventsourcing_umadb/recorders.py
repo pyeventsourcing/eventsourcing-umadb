@@ -357,24 +357,19 @@ class UmaDBDCBSubscription(DCBSubscription[UmaDBDCBRecorder]):
             query=query,
             after=after,
         )
-        self._read_response = UmaDBDCBReadResponse(
-            self._recorder.umadb.read(
-                (
-                    umadb.Query(
-                        items=[
-                            umadb.QueryItem(
-                                types=qi.types,
-                                tags=qi.tags,
-                            )
-                            for qi in query.items
-                        ],
+        self._recorder.umadb.subscribe(
+            query=umadb.Query(
+                items=[
+                    umadb.QueryItem(
+                        types=qi.types,
+                        tags=qi.tags,
                     )
-                    if query
-                    else None
-                ),
-                start=after + 1 if after else None,
-                subscribe=True,
+                    for qi in query.items
+                ],
             )
+            if query
+            else None,
+            after=after,
         )
 
     def __next__(self) -> DCBSequencedEvent:

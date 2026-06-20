@@ -440,12 +440,6 @@ class TestUmaDBDCBRecorder(DCBRecorderTestCase, WithUmaDB):
         with recorder.subscribe(after=recorder.umadb.head()) as subscription:
             list(subscription)
 
-        # TODO: Why does this not block? Need to investigate UmaDB behaviour
-        #  when subscribing to current head. Does it simply return??
-        # # Start subscription.
-        # with recorder.subscribe(after=initial_position+1) as subscription:
-        #     received = next(subscription)
-
 
 del AggregateRecorderTestCase
 del ApplicationRecorderTestCase

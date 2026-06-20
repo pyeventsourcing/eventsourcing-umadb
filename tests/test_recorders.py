@@ -437,9 +437,6 @@ class TestUmaDBDCBRecorder(DCBRecorderTestCase, WithUmaDB):
             received = next(subscription)
         self.assertEqual(event1.uuid, received.event.uuid)
 
-        with recorder.subscribe(after=recorder.umadb.head()) as subscription:
-            list(subscription)
-
 
 del AggregateRecorderTestCase
 del ApplicationRecorderTestCase

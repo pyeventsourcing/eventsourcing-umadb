@@ -7,10 +7,10 @@ from uuid import uuid4
 from umadb import AppendCondition, Client, Event, Query, QueryItem
 
 
-class TestUmaDBClient(unittest.TestCase):
+class TestUmaDbClient(unittest.TestCase):
     def _generate_tagged_event(self, tag: str) -> Event:
         return Event(
-            uuid=str(uuid4()),
+            uuid=uuid4(),
             event_type="OrderCreated",
             data=b"12345",
             tags=[tag],

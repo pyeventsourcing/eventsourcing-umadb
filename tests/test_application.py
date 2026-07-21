@@ -10,7 +10,7 @@ from eventsourcing.utils import get_topic
 DEFAULT_LOCAL_UMADB_URI = "http://127.0.0.1:50051"
 
 
-class TestApplicationWithUmaDB(ExampleApplicationTestCase):
+class TestApplicationWithUmaDb(ExampleApplicationTestCase):
     expected_factory_topic = "eventsourcing_umadb.factory:Factory"
 
     def setUp(self) -> None:
@@ -30,18 +30,17 @@ class TestApplicationWithUmaDB(ExampleApplicationTestCase):
         self.super_test_example_application()
 
     def super_test_example_application(self) -> None:
-        from eventsourcing.tests.application import BankAccounts
-        from eventsourcing.tests.domain import BankAccount
+        from eventsourcing.tests.application import BankAccountsWithPydantic
 
         # app = BankAccounts(env={"IS_SNAPSHOTTING_ENABLED": "y"})
-        BankAccounts.is_snapshotting_enabled = False
-        app = BankAccounts()
+        BankAccountsWithPydantic.is_snapshotting_enabled = False
+        app = BankAccountsWithPydantic()
 
         self.assertEqual(get_topic(type(app.factory)), self.expected_factory_topic)
 
         # Check AccountNotFound exception.
-        with self.assertRaises(BankAccounts.AccountNotFoundError):
-            app.get_account(uuid4())
+        with self.assertRaises(BankAccountsWithPydantic.AccountNotFoundError):
+            app.get_account(str(uuid4()))
 
         # Open an account.
         account_id = app.open_account(

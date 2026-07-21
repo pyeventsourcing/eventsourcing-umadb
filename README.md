@@ -18,46 +18,44 @@ Use the `eventsourcing.dcb` package to define a DCB application. Read the [docs]
 
 ```python
 from typing import Any, Dict, cast
+from uuid import uuid4
 
-from eventsourcing.dcb.application import DCBApplication
-from eventsourcing.dcb.domain import EnduringObject
-from eventsourcing.dcb.msgpack import Decision, InitialDecision, MessagePackMapper
-from eventsourcing.domain import event
+from eventsourcing.domain import triggers
+from eventsourcing.pydantic import DCBApplication, Decision, EnduringObject
 from eventsourcing.utils import get_topic
 
 
 class TrainingSchool(DCBApplication):
-    env = {"MAPPER_TOPIC": get_topic(MessagePackMapper)}
-
     def register(self, name: str) -> str:
-        dog = Dog(name=name)
+        dog = Dog(dog_id=str(uuid4()), name=name)
         self.repository.save(dog)
         return dog.id
 
     def add_trick(self, dog_id: str, trick: str) -> None:
-        dog = cast(Dog, self.repository.get(dog_id))
+        dog = self.repository.get(dog_id, Dog)
         dog.add_trick(trick)
         self.repository.save(dog)
 
     def get_dog(self, dog_id: str) -> Dict[str, Any]:
-        dog = cast(Dog, self.repository.get(dog_id))
+        dog = self.repository.get(dog_id, Dog)
         return {"name": dog.name, "tricks": tuple(dog.tricks)}
 
 
-class Dog(EnduringObject[Decision, str]):
-    class Registered(InitialDecision):
+class Dog(EnduringObject):
+    class Registered(Decision):
         dog_id: str
         name: str
 
     class TrickAdded(Decision):
         trick: str
 
-    @event(Registered)
-    def __init__(self, *, name: str) -> None:
+    @triggers(Registered)
+    def __init__(self, *, dog_id: str, name: str) -> None:
+        self.id = dog_id
         self.name = name
         self.tricks: list[str] = []
 
-    @event(TrickAdded)
+    @triggers(TrickAdded)
     def add_trick(self, trick: str) -> None:
         self.tricks.append(trick)
 

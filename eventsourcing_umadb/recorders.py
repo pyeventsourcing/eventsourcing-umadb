@@ -14,6 +14,7 @@ from eventsourcing.dcb.api import (
     DCBSequencedEvent,
     DCBSubscription,
 )
+from eventsourcing.domain import NIL_UUID
 from eventsourcing.persistence import (
     AggregateRecorder,
     ApplicationRecorder,
@@ -24,7 +25,7 @@ from eventsourcing.persistence import (
 )
 
 
-class UmaDBAggregateRecorder(AggregateRecorder):
+class UmaDbAggregateRecorder(AggregateRecorder):
     def __init__(
         self,
         umadb: umadb.Client,
@@ -34,7 +35,7 @@ class UmaDBAggregateRecorder(AggregateRecorder):
     ) -> None:
         if for_snapshotting:
             raise NotImplementedError("Snapshotting is not supported")
-        super(UmaDBAggregateRecorder, self).__init__(*args, **kwargs)
+        super(UmaDbAggregateRecorder, self).__init__(*args, **kwargs)
         self.umadb = umadb
         self.for_snapshotting = for_snapshotting
 
@@ -74,11 +75,8 @@ class UmaDBAggregateRecorder(AggregateRecorder):
                 event_type=stored_event.topic,
                 data=stored_event.state,
                 tags=[originator_id_tag, originator_version_tag],
-                uuid=(
-                    str(stored_event.event_id)
-                    if stored_event.event_id
-                    else str(uuid4())
-                ),
+                uuid=stored_event.uuid,
+                metadata=stored_event.metadata,
             )
             umadb_events.append(umadb_event)
         try:
@@ -154,7 +152,8 @@ class UmaDBAggregateRecorder(AggregateRecorder):
                     originator_version=extracted_originator_version,
                     topic=ue.event.event_type,
                     state=ue.event.data,
-                    event_id=UUID(ue.event.uuid) if ue.event.uuid else None,
+                    uuid=ue.event.uuid or NIL_UUID,
+                    metadata=ue.event.metadata,
                 )
             )
         return stored_events
@@ -162,15 +161,15 @@ class UmaDBAggregateRecorder(AggregateRecorder):
     def _extract_originator_version(self, ue: umadb.SequencedEvent) -> int:
         return int(ue.event.tags[1].split(":")[1])
 
-    def _extract_originator_id(self, ue: umadb.SequencedEvent) -> UUID:
+    def _extract_originator_id(self, ue: umadb.SequencedEvent) -> str:
         try:
-            return UUID(ue.event.tags[0].split(":")[1])
+            return ue.event.tags[0].split(":")[1]
         except IndexError as e:
             msg = f"Couldn't extract originator ID from: {ue.event.tags[0]}"
             raise ValueError(msg) from e
 
 
-class UmaDBApplicationRecorder(UmaDBAggregateRecorder, ApplicationRecorder):
+class UmaDbApplicationRecorder(UmaDbAggregateRecorder, ApplicationRecorder):
     def max_notification_id(self) -> int | None:
         return self.umadb.head()
 
@@ -214,31 +213,31 @@ class UmaDBApplicationRecorder(UmaDBAggregateRecorder, ApplicationRecorder):
             originator_version=self._extract_originator_version(ue),
             topic=ue.event.event_type,
             state=ue.event.data,
-            event_id=UUID(ue.event.uuid) if ue.event.uuid else None,
+            uuid=ue.event.uuid or NIL_UUID,
+            metadata=ue.event.metadata,
         )
 
     def subscribe(
         self, gt: int | None = None, topics: Sequence[str] = ()
-    ) -> Subscription[UmaDBApplicationRecorder]:
-        return UmaDBSubscription(
+    ) -> Subscription[UmaDbApplicationRecorder]:
+        return UmaDbSubscription(
             recorder=self,
             gt=gt,
             topics=topics,
         )
 
 
-class UmaDBSubscription(Subscription[UmaDBApplicationRecorder]):
+class UmaDbSubscription(Subscription[UmaDbApplicationRecorder]):
     def __init__(
         self,
-        recorder: UmaDBApplicationRecorder,
+        recorder: UmaDbApplicationRecorder,
         gt: int | None = None,
         topics: Sequence[str] = (),
     ) -> None:
         super().__init__(recorder=recorder, gt=gt, topics=topics)
-        self._read_response = recorder.umadb.read(
+        self._read_response = recorder.umadb.subscribe(
             query=umadb.Query(items=[umadb.QueryItem(types=topics)]),
-            start=gt + 1 if isinstance(gt, int) else None,
-            subscribe=True,
+            after=gt,
         )
 
     def __next__(self) -> Notification:
@@ -247,7 +246,7 @@ class UmaDBSubscription(Subscription[UmaDBApplicationRecorder]):
         return self._recorder.construct_notification(next(self._read_response))
 
 
-class UmaDBDCBRecorder(DCBRecorder):
+class UmaDbDCBRecorder(DCBRecorder):
     def __init__(self, umadb: umadb.Client):
         self.umadb = umadb
 
@@ -261,7 +260,8 @@ class UmaDBDCBRecorder(DCBRecorder):
                         event_type=e.type,
                         data=e.data,
                         tags=e.tags,
-                        uuid=e.uuid if e.uuid else str(uuid4()),
+                        uuid=e.uuid if e.uuid else uuid4(),
+                        metadata=e.metadata,
                     )
                     for e in events
                 ],
@@ -284,6 +284,9 @@ class UmaDBDCBRecorder(DCBRecorder):
             )
         except umadb.IntegrityError as exc:
             raise IntegrityError(exc)
+
+    def head(self) -> int | None:
+        return self.umadb.head()
 
     def read(
         self,
@@ -309,22 +312,22 @@ class UmaDBDCBRecorder(DCBRecorder):
             start=after + 1 if after else None,
             limit=limit,
         )
-        return UmaDBDCBReadResponse(r)
+        return UmaDbDCBReadResponse(r)
 
     def subscribe(
         self,
         query: DCBQuery | None = None,
         *,
         after: int | None = None,
-    ) -> UmaDBDCBSubscription:
-        return UmaDBDCBSubscription(
+    ) -> UmaDbDCBSubscription:
+        return UmaDbDCBSubscription(
             recorder=self,
             query=query,
             after=after,
         )
 
 
-class UmaDBDCBReadResponse(DCBReadResponse):
+class UmaDbDCBReadResponse(DCBReadResponse):
     def __init__(self, read_response: umadb.ReadResponse) -> None:
         self.read_response = read_response
 
@@ -333,22 +336,23 @@ class UmaDBDCBReadResponse(DCBReadResponse):
         return self.read_response.head()
 
     def __next__(self) -> DCBSequencedEvent:
-        sequenced_event = next(self.read_response)
+        sequenced = next(self.read_response)
         return DCBSequencedEvent(
-            position=sequenced_event.position,
+            position=sequenced.position,
             event=DCBEvent(
-                type=sequenced_event.event.event_type,
-                data=sequenced_event.event.data,
-                tags=sequenced_event.event.tags,
-                uuid=sequenced_event.event.uuid,
+                type=sequenced.event.event_type,
+                data=sequenced.event.data,
+                tags=sequenced.event.tags,
+                uuid=sequenced.event.uuid or NIL_UUID,
+                metadata=sequenced.event.metadata,
             ),
         )
 
 
-class UmaDBDCBSubscription(DCBSubscription[UmaDBDCBRecorder]):
+class UmaDbDCBSubscription(DCBSubscription[UmaDbDCBRecorder]):
     def __init__(
         self,
-        recorder: UmaDBDCBRecorder,
+        recorder: UmaDbDCBRecorder,
         query: DCBQuery | None = None,
         after: int | None = None,
     ) -> None:
@@ -375,13 +379,14 @@ class UmaDBDCBSubscription(DCBSubscription[UmaDBDCBRecorder]):
         )
 
     def __next__(self) -> DCBSequencedEvent:
-        sequenced_event = next(self._subscription)
+        sequenced = next(self._subscription)
         return DCBSequencedEvent(
-            position=sequenced_event.position,
+            position=sequenced.position,
             event=DCBEvent(
-                type=sequenced_event.event.event_type,
-                data=sequenced_event.event.data,
-                tags=sequenced_event.event.tags,
-                uuid=sequenced_event.event.uuid,
+                type=sequenced.event.event_type,
+                data=sequenced.event.data,
+                tags=sequenced.event.tags,
+                uuid=sequenced.event.uuid or NIL_UUID,
+                metadata=sequenced.event.metadata,
             ),
         )

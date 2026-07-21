@@ -4,14 +4,15 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "eventsourcing-umadb"
-version = "0.3.3"
+version = "0.4.0a1"
 description = "Python package for eventsourcing with UmaDB"
 authors = [
     { "name" = "John Bywater", "email" = "john.bywater@appropriatesoftware.net" },
 ]
 license = "BSD 3-Clause"
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 3 - Alpha",
+#    "Development Status :: 4 - Beta",
     "License :: OSI Approved :: BSD License",
      "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
@@ -27,15 +28,17 @@ repository = "https://github.com/pyeventsourcing/eventsourcing-umadb"
 include = ["eventsourcing_umadb/py.typed"]
 
 dependencies = [
-    "eventsourcing>=9.6.0b1",
-    "umadb>=0.5.8",
+    "eventsourcing>=10.0.0a1",
+    "umadb>=0.6.5",
 ]
 
 [tool.poetry.group.dev.dependencies]
 black = { version = "*", allow-prereleases = true }
 isort = "*"
 mypy = "*"
-eventsourcing = { version = ">=9.6.0b1", extras = ["crypto"]}
+#eventsourcing = { version = ">=10.0.0a1", extras = ["crypto"]}
+eventsourcing = {path = "../eventsourcing", extras = ["crypto", "pydantic"], develop = true}
+
 types-protobuf = "*"
 msgspec = "*"
 

@@ -5,7 +5,7 @@ from eventsourcing.persistence import ApplicationRecorder
 from eventsourcing.tests.persistence import NonInterleavingNotificationIDsBaseCase
 from umadb import Client
 
-from eventsourcing_umadb.recorders import UmaDBApplicationRecorder
+from eventsourcing_umadb.recorders import UmaDbApplicationRecorder
 
 DEFAULT_LOCAL_UMADB_URI = "http://127.0.0.1:50051"
 
@@ -19,7 +19,7 @@ class TestNonInterleaving(NonInterleavingNotificationIDsBaseCase):
         self.umadb = Client(DEFAULT_LOCAL_UMADB_URI)
 
     def create_recorder(self) -> ApplicationRecorder:
-        return UmaDBApplicationRecorder(umadb=self.umadb)
+        return UmaDbApplicationRecorder(umadb=self.umadb)
 
 
 del NonInterleavingNotificationIDsBaseCase

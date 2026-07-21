@@ -1,42 +1,44 @@
 from typing import Any, Dict, cast
 from unittest import TestCase
+from uuid import uuid4
 
 from eventsourcing.dcb.application import DCBApplication
-from eventsourcing.dcb.domain import EnduringObject
-from eventsourcing.dcb.msgpack import Decision, InitialDecision, MessagePackMapper
-from eventsourcing.domain import event
+from eventsourcing.domain import EnduringObject, event
+from eventsourcing.pydantic.application import PydanticDCBApplication
+from eventsourcing.pydantic.immutable import PydanticDecision
+from eventsourcing.pydantic.mutable import PydanticEnduringObject
 from eventsourcing.utils import get_topic
 
 
-class TrainingSchool(DCBApplication):
-    env = {"MAPPER_TOPIC": get_topic(MessagePackMapper)}
+class TrainingSchool(PydanticDCBApplication):
 
     def register(self, name: str) -> str:
-        dog = Dog(name=name)
+        dog = Dog(dog_id=str(uuid4()), name=name)
         self.repository.save(dog)
         return dog.id
 
     def add_trick(self, dog_id: str, trick: str) -> None:
-        dog = cast(Dog, self.repository.get(dog_id))
+        dog = self.repository.get(dog_id, Dog)
         dog.add_trick(trick)
         self.repository.save(dog)
 
     def get_dog(self, dog_id: str) -> Dict[str, Any]:
-        dog = cast(Dog, self.repository.get(dog_id))
+        dog = self.repository.get(dog_id, Dog)
         return {"name": dog.name, "tricks": tuple(dog.tricks)}
 
 
-class Dog(EnduringObject[Decision, str]):
-    class Registered(InitialDecision):
+class Dog(PydanticEnduringObject):
+    class Registered(PydanticDecision):
         dog_id: str
         name: str
 
     @event(Registered)
-    def __init__(self, *, name: str) -> None:
+    def __init__(self, *, dog_id: str, name: str) -> None:
+        self.id = dog_id
         self.name = name
         self.tricks: list[str] = []
 
-    class TrickAdded(Decision):
+    class TrickAdded(PydanticDecision):
         trick: str
 
     @event(TrickAdded)

@@ -11,17 +11,17 @@ from eventsourcing.persistence import (
     ProcessRecorder,
     TrackingRecorder,
 )
-from eventsourcing.utils import Environment
+from eventsourcing.utils import Environment, resolve_topic
 from umadb import Client
 
 from eventsourcing_umadb.recorders import (
-    UmaDBAggregateRecorder,
-    UmaDBApplicationRecorder,
-    UmaDBDCBRecorder,
+    UmaDbAggregateRecorder,
+    UmaDbApplicationRecorder,
+    UmaDbDCBRecorder,
 )
 
 
-class BaseUmaDBFactory(BaseInfrastructureFactory[TrackingRecorder]):
+class BaseUmaDbFactory(BaseInfrastructureFactory[TrackingRecorder]):
     UMADB_URI = "UMADB_URI"
 
     def __init__(self, env: Environment):
@@ -40,18 +40,27 @@ class BaseUmaDBFactory(BaseInfrastructureFactory[TrackingRecorder]):
             del self.umadb
 
 
-class Factory(BaseUmaDBFactory, InfrastructureFactory):
+class Factory(BaseUmaDbFactory, InfrastructureFactory[TrackingRecorder]):
     """
     Infrastructure factory for UmaDB infrastructure.
     """
 
     def aggregate_recorder(self, purpose: str = "events") -> AggregateRecorder:
-        return UmaDBAggregateRecorder(
+        return UmaDbAggregateRecorder(
             umadb=self.umadb, for_snapshotting=bool(purpose == "snapshots")
         )
 
     def application_recorder(self) -> ApplicationRecorder:
-        return UmaDBApplicationRecorder(self.umadb)
+        application_recorder_topic = self.env.get(self.APPLICATION_RECORDER_TOPIC)
+        if application_recorder_topic:
+            application_recorder_class: type[UmaDbApplicationRecorder] = resolve_topic(
+                application_recorder_topic
+            )
+            assert issubclass(application_recorder_class, UmaDbApplicationRecorder)
+        else:
+            application_recorder_class = UmaDbApplicationRecorder
+
+        return application_recorder_class(self.umadb)
 
     def process_recorder(self) -> ProcessRecorder:
         raise NotImplementedError()
@@ -59,9 +68,10 @@ class Factory(BaseUmaDBFactory, InfrastructureFactory):
     def tracking_recorder(
         self, tracking_record_class: type[TrackingRecorder] | None = None
     ) -> TrackingRecorder:
+        # TODO: We can implement this now that UmaDB supports tracking records.
         raise NotImplementedError()
 
 
-class DCBFactory(BaseUmaDBFactory, DCBInfrastructureFactory[TrackingRecorder]):
+class DCBFactory(BaseUmaDbFactory, DCBInfrastructureFactory[TrackingRecorder]):
     def dcb_recorder(self) -> DCBRecorder:
-        return UmaDBDCBRecorder(self.umadb)
+        return UmaDbDCBRecorder(self.umadb)

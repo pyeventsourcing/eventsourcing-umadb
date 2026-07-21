@@ -15,14 +15,17 @@ from eventsourcing.utils import Environment
 
 from eventsourcing_umadb.factory import Factory
 from eventsourcing_umadb.recorders import (
-    UmaDBAggregateRecorder,
-    UmaDBApplicationRecorder,
+    UmaDbAggregateRecorder,
+    UmaDbApplicationRecorder,
 )
 
 DEFAULT_LOCAL_UMADB_URI = "http://127.0.0.1:50051"
 
 
 class TestFactory(InfrastructureFactoryTestCase[Factory]):
+    class UmaDBApplicationRecorderSubclass(UmaDbApplicationRecorder):
+        pass
+
     def test_create_process_recorder(self) -> None:
         self.skipTest("UmaDB doesn't support tracking records")
 
@@ -30,10 +33,10 @@ class TestFactory(InfrastructureFactoryTestCase[Factory]):
         return Factory
 
     def expected_aggregate_recorder_class(self) -> Type[AggregateRecorder]:
-        return UmaDBAggregateRecorder
+        return UmaDbAggregateRecorder
 
     def expected_application_recorder_class(self) -> Type[ApplicationRecorder]:
-        return UmaDBApplicationRecorder
+        return UmaDbApplicationRecorder
 
     def expected_process_recorder_class(self) -> Type[ProcessRecorder]:
         raise NotImplementedError()
@@ -41,7 +44,13 @@ class TestFactory(InfrastructureFactoryTestCase[Factory]):
     def expected_tracking_recorder_class(self) -> Type[TrackingRecorder]:
         raise NotImplementedError()
 
+    def application_recorder_subclass(self) -> type[ApplicationRecorder]:
+        return self.UmaDBApplicationRecorderSubclass
+
     def tracking_recorder_subclass(self) -> type[TrackingRecorder]:
+        raise NotImplementedError()
+
+    def process_recorder_subclass(self) -> type[ProcessRecorder]:
         raise NotImplementedError()
 
     @skip("UmaDB doesn't support tracking records")

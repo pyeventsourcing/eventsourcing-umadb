@@ -55,7 +55,7 @@ test:
 
 .PHONY: benchmark-umadb
 benchmark-umadb:
-	TEST_BENCHMARK_NUM_ITERS=30 $(POETRY) run python -m unittest tests.test_umadb.TestUmaDBClient
+	TEST_BENCHMARK_NUM_ITERS=30 $(POETRY) run python -m unittest tests.test_umadb.TestUmaDbClient
 
 .PHONY: build
 build:
@@ -67,7 +67,7 @@ publish:
 
 .PHONY: start-umadb
 start-umadb:
-	docker run --rm -d --name my-umadb -p 50051:50051 umadb/umadb:latest
+	docker run --rm -d --name my-umadb -p 50051:50051 umadb/umadb:0.6.0
 	sleep 1
 
 

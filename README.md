@@ -47,6 +47,7 @@ class Dog(EnduringObject):
         name: str
 
     class TrickAdded(Decision):
+        dog_id: str
         trick: str
 
     @triggers(Registered)

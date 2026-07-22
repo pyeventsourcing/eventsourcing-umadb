@@ -32,14 +32,15 @@ class Dog(PydanticEnduringObject):
         dog_id: str
         name: str
 
+    class TrickAdded(PydanticDecision):
+        dog_id: str
+        trick: str
+
     @event(Registered)
     def __init__(self, *, dog_id: str, name: str) -> None:
         self.id = dog_id
         self.name = name
         self.tricks: list[str] = []
-
-    class TrickAdded(PydanticDecision):
-        trick: str
 
     @event(TrickAdded)
     def add_trick(self, trick: str) -> None:

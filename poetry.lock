@@ -137,17 +137,19 @@ files = [
 
 [[package]]
 name = "eventsourcing"
-version = "9.10.0a1"
+version = "10.0.0a1"
 description = "Event sourcing in Python"
 optional = false
 python-versions = ">=3.11.0"
 groups = ["main", "dev"]
-files = []
-develop = true
+files = [
+    {file = "eventsourcing-10.0.0a1-py3-none-any.whl", hash = "sha256:e9bc3e78e4eace7fd0212aebf8680a11d43d7d5c3cd9191a28521aade78634d7"},
+    {file = "eventsourcing-10.0.0a1.tar.gz", hash = "sha256:7888f6a9b8d2d01fc86c922a14194cf456b9fc3513338f83246b2a5088452f00"},
+]
 
 [package.dependencies]
-pycryptodome = {version = ">=3.22", optional = true}
-pydantic = {version = ">=2.13.4", optional = true}
+pycryptodome = {version = ">=3.22", optional = true, markers = "extra == \"crypto\""}
+pydantic = {version = ">=2.13.4", optional = true, markers = "extra == \"pydantic\""}
 typing_extensions = "*"
 
 [package.extras]
@@ -156,10 +158,6 @@ cryptography = ["cryptography (>=46.0.5)"]
 msgspec = ["msgspec (>=0.21.1)"]
 postgres = ["psycopg[pool] (>=3.2)"]
 pydantic = ["pydantic (>=2.13.4)"]
-
-[package.source]
-type = "directory"
-url = "../eventsourcing"
 
 [[package]]
 name = "isort"
@@ -789,4 +787,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11"
-content-hash = "c5c7ed8b37a92e7d296bdf50aa4580126fbfda007e8bb1a59911b4620cc16057"
+content-hash = "9274a9d8d1e26f7321e4a1be42db2e05f32483dbea4c07d8c0c194edc1a82ebf"

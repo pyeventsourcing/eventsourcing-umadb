@@ -2,18 +2,13 @@ from typing import Any, Dict, cast
 from unittest import TestCase
 from uuid import uuid4
 
-from eventsourcing.dcb.application import DCBApplication
-from eventsourcing.domain import EnduringObject, event
-from eventsourcing.pydantic.application import PydanticDCBApplication
-from eventsourcing.pydantic.immutable import PydanticDecision
-from eventsourcing.pydantic.mutable import PydanticEnduringObject
-from eventsourcing.utils import get_topic
+from eventsourcing.domain import event
+from eventsourcing.pydantic import DCBApplication, Decision, EnduringObject
 
 
-class TrainingSchool(PydanticDCBApplication):
-
+class TrainingSchool(DCBApplication):
     def register(self, name: str) -> str:
-        dog = Dog(dog_id=str(uuid4()), name=name)
+        dog = Dog(name=name)
         self.repository.save(dog)
         return dog.id
 
@@ -27,18 +22,17 @@ class TrainingSchool(PydanticDCBApplication):
         return {"name": dog.name, "tricks": tuple(dog.tricks)}
 
 
-class Dog(PydanticEnduringObject):
-    class Registered(PydanticDecision):
+class Dog(EnduringObject):
+    class Registered(Decision):
         dog_id: str
         name: str
 
-    class TrickAdded(PydanticDecision):
+    class TrickAdded(Decision):
         dog_id: str
         trick: str
 
     @event(Registered)
-    def __init__(self, *, dog_id: str, name: str) -> None:
-        self.id = dog_id
+    def __init__(self, *, name: str) -> None:
         self.name = name
         self.tricks: list[str] = []
 

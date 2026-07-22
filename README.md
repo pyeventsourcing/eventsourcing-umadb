@@ -17,17 +17,20 @@ Please note, it is recommended to install Python packages into a Python virtual 
 Use the `eventsourcing.dcb` package to define a DCB application. Read the [docs](https://eventsourcing.readthedocs.io/en/stable/topics/dcb.html) for more information.
 
 ```python
-from typing import Any, Dict, cast
+from typing import TypedDict
 from uuid import uuid4
 
 from eventsourcing.domain import triggers
 from eventsourcing.pydantic import DCBApplication, Decision, EnduringObject
-from eventsourcing.utils import get_topic
+
+class DogSummary(TypedDict):
+    name: str
+    tricks: tuple[str, ...]
 
 
 class TrainingSchool(DCBApplication):
     def register(self, name: str) -> str:
-        dog = Dog(dog_id=str(uuid4()), name=name)
+        dog = Dog(name=name)
         self.repository.save(dog)
         return dog.id
 
@@ -36,7 +39,7 @@ class TrainingSchool(DCBApplication):
         dog.add_trick(trick)
         self.repository.save(dog)
 
-    def get_dog(self, dog_id: str) -> Dict[str, Any]:
+    def get_dog(self, dog_id: str) -> DogSummary:
         dog = self.repository.get(dog_id, Dog)
         return {"name": dog.name, "tricks": tuple(dog.tricks)}
 
@@ -51,8 +54,7 @@ class Dog(EnduringObject):
         trick: str
 
     @triggers(Registered)
-    def __init__(self, *, dog_id: str, name: str) -> None:
-        self.id = dog_id
+    def __init__(self, *, name: str) -> None:
         self.name = name
         self.tricks: list[str] = []
 
@@ -67,12 +69,10 @@ Configure the application to use UmaDB. Set environment variable
 `UMADB_URI` to your UmaDB URI.
 
 ```python
-app = TrainingSchool(
-    env={
-        "PERSISTENCE_MODULE": "eventsourcing_umadb",
-        "UMADB_URI": "http://127.0.0.1:50051",
-    }
-)
+app = TrainingSchool(env={
+    "PERSISTENCE_MODULE": "eventsourcing_umadb",
+    "UMADB_URI": "http://127.0.0.1:50051",
+})
 ```
 
 The application's methods may be then called, from tests and

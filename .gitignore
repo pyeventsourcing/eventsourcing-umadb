@@ -134,3 +134,4 @@ dmypy.json
 
 *.sqlite3*
 /uma.db
+/umadb.pid

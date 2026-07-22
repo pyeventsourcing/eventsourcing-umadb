@@ -24,11 +24,11 @@ jobs:
       - name: Install packages
         run: make install
 
-      - name: Lint
-        run: make lint
-
       - name: Start UmaDB
         run: make start-umadb
+
+      - name: Lint
+        run: make lint
 
       - name: Run tests
         run: make test

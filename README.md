@@ -105,7 +105,7 @@ and the [UmaDB](https://umadb.io) project.
 
 Join the Event Sourcing in Python [Discord server](https://discord.gg/C8TVRdN9K5) today.
 
-## Developers
+## Contributors
 
 Clone the GitHub repo and the use the following `make` commands.
 

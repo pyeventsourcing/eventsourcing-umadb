@@ -6,11 +6,16 @@ with [UmaDB](https://umadb.io/).
 
 ## Installation
 
-Use pip to install the stable distribution from the Python Package Index.
+Add the Python `eventsourcing` package to your project with the `umadb` option.
+Run `uv init` to start a new project.
 
-    $ pip install eventsourcing-umadb
 
-Please note, it is recommended to install Python packages into a Python virtual environment.
+    uv add "eventsourcing[umadb,pydantic]~=10.0.0a3"
+
+Pydantic is recommended for modelling and serialising events.
+
+After installing, you can start the UmaDB server with `uv run umadb`.
+
 
 ## Getting started
 
@@ -96,41 +101,45 @@ For more information, please refer to the Python
 [eventsourcing](https://eventsourcing.readthedocs.io/en/stable/topics/dcb.html) library
 and the [UmaDB](https://umadb.io) project.
 
+## Community
+
+Join the Event Sourcing in Python [Discord server](https://discord.gg/C8TVRdN9K5) today.
+
 ## Developers
 
 Clone the GitHub repo and the use the following `make` commands.
 
 Install Poetry.
 
-    $ make install-poetry
+    make install-poetry
 
 Install packages.
 
-    $ make install
+    make install
 
 Start UmaDB.
 
-    $ make start-umadb
+    make start-umadb
 
 Run tests.
 
-    $ make test
+    make test
 
 Stop UmaDB.
 
-    $ make stop-umadb
+    make stop-umadb
 
 Check the formatting of the code.
 
-    $ make lint
+    make lint
 
 Reformat the code.
 
-    $ make fmt
+    make fmt
 
 Tests belong in `./tests`.
 
 Edit package dependencies in `pyproject.toml`. Update installed packages (and the
 `poetry.lock` file) using the following command.
 
-    $ make update
+    make update

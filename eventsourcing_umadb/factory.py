@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from typing import Any
 
-from eventsourcing.dcb.api import DCBRecorder
-from eventsourcing.dcb.persistence import DCBInfrastructureFactory
+from eventsourcing.dcb.api import DcbRecorder
+from eventsourcing.dcb.persistence import DcbInfrastructureFactory
 from eventsourcing.persistence import (
     AggregateRecorder,
     ApplicationRecorder,
@@ -17,7 +17,7 @@ from umadb import Client
 from eventsourcing_umadb.recorders import (
     UmaDbAggregateRecorder,
     UmaDbApplicationRecorder,
-    UmaDbDCBRecorder,
+    UmaDbDcbRecorder,
 )
 
 
@@ -72,6 +72,6 @@ class Factory(BaseUmaDbFactory, InfrastructureFactory[TrackingRecorder]):
         raise NotImplementedError()
 
 
-class DCBFactory(BaseUmaDbFactory, DCBInfrastructureFactory[TrackingRecorder]):
-    def dcb_recorder(self) -> DCBRecorder:
-        return UmaDbDCBRecorder(self.umadb)
+class DcbFactory(BaseUmaDbFactory, DcbInfrastructureFactory[TrackingRecorder]):
+    def dcb_recorder(self) -> DcbRecorder:
+        return UmaDbDcbRecorder(self.umadb)

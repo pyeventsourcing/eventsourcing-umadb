@@ -3,10 +3,10 @@ from unittest import TestCase
 from uuid import uuid4
 
 from eventsourcing.domain import event
-from eventsourcing.pydantic import DCBApplication, Decision, EnduringObject
+from eventsourcing.pydantic import DcbApplication, Decision, EnduringObject
 
 
-class TrainingSchool(DCBApplication):
+class TrainingSchool(DcbApplication):
     def register(self, name: str) -> str:
         dog = Dog(name=name)
         self.repository.save(dog)
@@ -41,7 +41,7 @@ class Dog(EnduringObject):
         self.tricks.append(trick)
 
 
-class TestDCBApplication(TestCase):
+class TestDcbApplication(TestCase):
     def test(self) -> None:
         app = TrainingSchool(
             env={

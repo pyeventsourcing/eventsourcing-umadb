@@ -32,9 +32,7 @@ class TestApplicationWithUmaDb(ExampleApplicationTestCase):
     def super_test_example_application(self) -> None:
         from eventsourcing.tests.application import BankAccountsWithPydantic
 
-        # app = BankAccounts(env={"IS_SNAPSHOTTING_ENABLED": "y"})
-        BankAccountsWithPydantic.is_snapshotting_enabled = False
-        app = BankAccountsWithPydantic()
+        app = BankAccountsWithPydantic(env={"IS_SNAPSHOTTING_ENABLED": "f"})
 
         self.assertEqual(get_topic(type(app.factory)), self.expected_factory_topic)
 

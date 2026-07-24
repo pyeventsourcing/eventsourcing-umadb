@@ -21,14 +21,14 @@ from typing import TypedDict
 from uuid import uuid4
 
 from eventsourcing.domain import triggers
-from eventsourcing.pydantic import DCBApplication, Decision, EnduringObject
+from eventsourcing.pydantic import DcbApplication, Decision, EnduringObject
 
 class DogSummary(TypedDict):
     name: str
     tricks: tuple[str, ...]
 
 
-class TrainingSchool(DCBApplication):
+class TrainingSchool(DcbApplication):
     def register(self, name: str) -> str:
         dog = Dog(name=name)
         self.repository.save(dog)

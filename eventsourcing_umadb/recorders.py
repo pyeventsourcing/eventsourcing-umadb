@@ -6,13 +6,13 @@ from uuid import UUID, uuid4
 
 import umadb
 from eventsourcing.dcb.api import (
-    DCBAppendCondition,
-    DCBEvent,
-    DCBQuery,
-    DCBReadResponse,
-    DCBRecorder,
-    DCBSequencedEvent,
-    DCBSubscription,
+    DcbAppendCondition,
+    DcbEvent,
+    DcbQuery,
+    DcbReadResponse,
+    DcbRecorder,
+    DcbSequencedEvent,
+    DcbSubscription,
 )
 from eventsourcing.domain import NIL_UUID
 from eventsourcing.persistence import (
@@ -246,12 +246,12 @@ class UmaDbSubscription(Subscription[UmaDbApplicationRecorder]):
         return self._recorder.construct_notification(next(self._read_response))
 
 
-class UmaDbDCBRecorder(DCBRecorder):
+class UmaDbDcbRecorder(DcbRecorder):
     def __init__(self, umadb: umadb.Client):
         self.umadb = umadb
 
     def append(
-        self, events: Sequence[DCBEvent], condition: DCBAppendCondition | None = None
+        self, events: Sequence[DcbEvent], condition: DcbAppendCondition | None = None
     ) -> int:
         try:
             return self.umadb.append(
@@ -290,11 +290,11 @@ class UmaDbDCBRecorder(DCBRecorder):
 
     def read(
         self,
-        query: DCBQuery | None = None,
+        query: DcbQuery | None = None,
         *,
         after: int | None = None,
         limit: int | None = None,
-    ) -> DCBReadResponse:
+    ) -> DcbReadResponse:
         r = self.umadb.read(
             (
                 umadb.Query(
@@ -312,22 +312,22 @@ class UmaDbDCBRecorder(DCBRecorder):
             start=after + 1 if after else None,
             limit=limit,
         )
-        return UmaDbDCBReadResponse(r)
+        return UmaDbDcbReadResponse(r)
 
     def subscribe(
         self,
-        query: DCBQuery | None = None,
+        query: DcbQuery | None = None,
         *,
         after: int | None = None,
-    ) -> UmaDbDCBSubscription:
-        return UmaDbDCBSubscription(
+    ) -> UmaDbDcbSubscription:
+        return UmaDbDcbSubscription(
             recorder=self,
             query=query,
             after=after,
         )
 
 
-class UmaDbDCBReadResponse(DCBReadResponse):
+class UmaDbDcbReadResponse(DcbReadResponse):
     def __init__(self, read_response: umadb.ReadResponse) -> None:
         self.read_response = read_response
 
@@ -335,11 +335,11 @@ class UmaDbDCBReadResponse(DCBReadResponse):
     def head(self) -> int | None:
         return self.read_response.head()
 
-    def __next__(self) -> DCBSequencedEvent:
+    def __next__(self) -> DcbSequencedEvent:
         sequenced = next(self.read_response)
-        return DCBSequencedEvent(
+        return DcbSequencedEvent(
             position=sequenced.position,
-            event=DCBEvent(
+            event=DcbEvent(
                 type=sequenced.event.event_type,
                 data=sequenced.event.data,
                 tags=sequenced.event.tags,
@@ -349,11 +349,11 @@ class UmaDbDCBReadResponse(DCBReadResponse):
         )
 
 
-class UmaDbDCBSubscription(DCBSubscription[UmaDbDCBRecorder]):
+class UmaDbDcbSubscription(DcbSubscription[UmaDbDcbRecorder]):
     def __init__(
         self,
-        recorder: UmaDbDCBRecorder,
-        query: DCBQuery | None = None,
+        recorder: UmaDbDcbRecorder,
+        query: DcbQuery | None = None,
         after: int | None = None,
     ) -> None:
         super().__init__(
@@ -378,11 +378,11 @@ class UmaDbDCBSubscription(DCBSubscription[UmaDbDCBRecorder]):
             after=after,
         )
 
-    def __next__(self) -> DCBSequencedEvent:
+    def __next__(self) -> DcbSequencedEvent:
         sequenced = next(self._subscription)
-        return DCBSequencedEvent(
+        return DcbSequencedEvent(
             position=sequenced.position,
-            event=DCBEvent(
+            event=DcbEvent(
                 type=sequenced.event.event_type,
                 data=sequenced.event.data,
                 tags=sequenced.event.tags,

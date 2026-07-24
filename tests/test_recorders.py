@@ -5,8 +5,8 @@ from typing import ClassVar
 from unittest import TestCase
 from uuid import uuid4
 
-from eventsourcing.dcb.api import DCBEvent
-from eventsourcing.dcb.tests import DCBRecorderTestCase
+from eventsourcing.dcb.api import DcbEvent
+from eventsourcing.dcb.tests import DcbRecorderTestCase
 from eventsourcing.domain import datetime_now_with_tzinfo
 from eventsourcing.persistence import (
     AggregateRecorder,
@@ -23,7 +23,7 @@ from umadb import AppendCondition, Client, Event, Query, QueryItem
 from eventsourcing_umadb.recorders import (
     UmaDbAggregateRecorder,
     UmaDbApplicationRecorder,
-    UmaDbDCBRecorder,
+    UmaDbDcbRecorder,
 )
 
 DEFAULT_LOCAL_UMADB_URI = "http://127.0.0.1:50051"
@@ -412,9 +412,9 @@ class TestUmaDbApplicationRecorder(ApplicationRecorderTestCase, WithUmaDb):
         super().optional_test_insert_subscribe(self.umadb.head() or 0)
 
 
-class TestUmaDbDCBRecorder(DCBRecorderTestCase, WithUmaDb):
+class TestUmaDbDcbRecorder(DcbRecorderTestCase, WithUmaDb):
     def test_append_read(self) -> None:
-        recorder = UmaDbDCBRecorder(self.umadb)
+        recorder = UmaDbDcbRecorder(self.umadb)
         self._test_append_read(recorder, self.umadb.head() or 0)
 
         # Also check event IDs and metadata are preserved.
@@ -422,7 +422,7 @@ class TestUmaDbDCBRecorder(DCBRecorderTestCase, WithUmaDb):
         initial_position = recorder.umadb.head()
 
         # Append one event.
-        event1 = DCBEvent(
+        event1 = DcbEvent(
             type="type1",
             data=b"data1",
             tags=["tagX"],
@@ -439,7 +439,7 @@ class TestUmaDbDCBRecorder(DCBRecorderTestCase, WithUmaDb):
         self.assertEqual(event1.metadata, result[0].event.metadata)
 
     def test_append_subscribe(self) -> None:
-        recorder = UmaDbDCBRecorder(self.umadb)
+        recorder = UmaDbDcbRecorder(self.umadb)
         self._test_append_subscribe(recorder, self.umadb.head() or 0)
 
         # Also check event IDs and metadata are preserved.
@@ -461,7 +461,7 @@ class TestUmaDbDCBRecorder(DCBRecorderTestCase, WithUmaDb):
         thread.start()
 
         # Append one event.
-        event1 = DCBEvent(
+        event1 = DcbEvent(
             type="type1",
             data=b"data1",
             tags=["tagX"],

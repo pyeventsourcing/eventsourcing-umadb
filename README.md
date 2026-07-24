@@ -23,26 +23,6 @@ from uuid import uuid4
 from eventsourcing.domain import triggers
 from eventsourcing.pydantic import DcbApplication, Decision, EnduringObject
 
-class DogSummary(TypedDict):
-    name: str
-    tricks: tuple[str, ...]
-
-
-class TrainingSchool(DcbApplication):
-    def register(self, name: str) -> str:
-        dog = Dog(name=name)
-        self.repository.save(dog)
-        return dog.id
-
-    def add_trick(self, dog_id: str, trick: str) -> None:
-        dog = self.repository.get(dog_id, Dog)
-        dog.add_trick(trick)
-        self.repository.save(dog)
-
-    def get_dog(self, dog_id: str) -> DogSummary:
-        dog = self.repository.get(dog_id, Dog)
-        return {"name": dog.name, "tricks": tuple(dog.tricks)}
-
 
 class Dog(EnduringObject):
     class Registered(Decision):
@@ -62,6 +42,26 @@ class Dog(EnduringObject):
     def add_trick(self, trick: str) -> None:
         self.tricks.append(trick)
 
+
+class TrainingSchool(DcbApplication):
+    def register(self, name: str) -> str:
+        dog = Dog(name=name)
+        self.repository.save(dog)
+        return dog.id
+
+    def add_trick(self, dog_id: str, trick: str) -> None:
+        dog = self.repository.get(dog_id, Dog)
+        dog.add_trick(trick)
+        self.repository.save(dog)
+
+    def get_dog(self, dog_id: str) -> DogSummary:
+        dog = self.repository.get(dog_id, Dog)
+        return {"name": dog.name, "tricks": tuple(dog.tricks)}
+
+
+class DogSummary(TypedDict):
+    name: str
+    tricks: tuple[str, ...]
 ```
 
 Configure the application to use UmaDB. Set environment variable

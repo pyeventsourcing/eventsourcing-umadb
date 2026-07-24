@@ -28,7 +28,7 @@ repository = "https://github.com/pyeventsourcing/eventsourcing-umadb"
 include = ["eventsourcing_umadb/py.typed"]
 
 dependencies = [
-    "eventsourcing>=10.0.0a1",
+    "eventsourcing>=10.0.0a3",
     "umadb>=0.6.5",
 ]
 
@@ -36,7 +36,7 @@ dependencies = [
 black = { version = "*", allow-prereleases = true }
 isort = "*"
 mypy = "*"
-eventsourcing = { version = ">=10.0.0a1", extras = ["crypto", "pydantic"], allow-prereleases = true }
+eventsourcing = { version = ">=10.0.0a3", extras = ["crypto", "pydantic"], allow-prereleases = true }
 #eventsourcing = {path = "../eventsourcing", extras = ["crypto", "pydantic"], develop = true}
 
 types-protobuf = "*"

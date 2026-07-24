@@ -126,6 +126,9 @@ class TestDocs(TestCase):
 
         print("{} lines of code in {}".format(num_code_lines, doc_path))
 
+        assert lines[0] == ""
+        lines[0] = "from __future__ import annotations"
+
         # Write the code into a temp file.
         tempfile = NamedTemporaryFile("w+")
         temp_path = tempfile.name

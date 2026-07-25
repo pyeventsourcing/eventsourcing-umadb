@@ -131,6 +131,7 @@ dmypy.json
 
 # PyCharm IDE
 /.idea/
+/.junie/
 
 *.sqlite3*
 /uma.db

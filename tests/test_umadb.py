@@ -1,10 +1,12 @@
 import datetime
 import os
+import threading
 import unittest
 from unittest import skipIf
 from uuid import uuid4
 
-from umadb import AppendCondition, Client, Event, Query, QueryItem
+import time
+from umadb import AppendCondition, Client, Event, Query, QueryItem, cancel_all_stream_responses
 
 
 class TestUmaDbClient(unittest.TestCase):
@@ -18,6 +20,22 @@ class TestUmaDbClient(unittest.TestCase):
 
     def _generate_tag(self) -> str:
         return "foo" + str(uuid4()) + ":" + "bar"
+
+    def test_cancel_all_stream_responses_after_one_second(self) -> None:
+        client = Client("http://127.0.0.1:50051")
+        subscription = client.subscribe(query=Query([QueryItem(tags=[str(uuid4())])]))
+
+        def cancel_after_one_second():
+            time.sleep(1)
+            cancel_all_stream_responses()
+
+        thread = threading.Thread(target=cancel_after_one_second)
+        thread.start()
+
+        with self.assertRaises(KeyboardInterrupt):
+            for x in subscription:
+                pass
+
 
     # @skipIf("TEST_BENCHMARK_NUM_ITERS" not in os.environ, "Don't mess up the tags")
     def test_benchmark_dcb_append(self) -> None:

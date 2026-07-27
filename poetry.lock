@@ -768,24 +768,24 @@ typing-extensions = ">=4.12.0"
 
 [[package]]
 name = "umadb"
-version = "0.6.7"
+version = "0.6.10"
 description = "Python client for UmaDB event store"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "umadb-0.6.7-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:6ce7836627aef2990621bc5533a75af8bfe39d1953bc33f69581e2ad71f68b00"},
-    {file = "umadb-0.6.7-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:f911a492a2a8f79d3e1d0cc954b023dd3ee42797b0d3afecf95e50339ab2b68a"},
-    {file = "umadb-0.6.7-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:28c3aafbbfea871c5dc80e84c6dad3687611e0b4ecbba71e7a8c95634896d81a"},
-    {file = "umadb-0.6.7-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:3d566f4ab2ad8c6197e4f16df0a826e522a2734b4eb93bd881438474abb9304e"},
-    {file = "umadb-0.6.7-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:a3a22096c88db7a5a8a6fabd6c24781d3f5a7236742affba44e80318ed9f11f3"},
-    {file = "umadb-0.6.7-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:c767ebc7045e792251a4f0d222f7e448ed72f6d0368f801ec79f26b092f13e82"},
-    {file = "umadb-0.6.7-cp310-abi3-win32.whl", hash = "sha256:edf934f79b8b53a70c14ee1bd60049c52aef9315241bef0b28c69ffe96695b35"},
-    {file = "umadb-0.6.7-cp310-abi3-win_amd64.whl", hash = "sha256:9e11b4cf5e09ee337b950a15d1a894cf962ca42ba4af5a23665255fe54de41a6"},
-    {file = "umadb-0.6.7.tar.gz", hash = "sha256:2156af63feef86a8fc237fd00fd3776812a5023c2ebdd51fd7e61adba9b2c711"},
+    {file = "umadb-0.6.10-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:14c6102a94c79b1c0ae12ec28517bb568a9a8031b5bffe0473931fa7099d26ff"},
+    {file = "umadb-0.6.10-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:7cf2f079fcd709a74a64e2dca5044dd20447cc29a3b0561308472e4cf7f2a500"},
+    {file = "umadb-0.6.10-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:0d8e7ea0aaf59a796ab59e31a975f996d34a6f5f2c91f4cf0cd4afb2f1e463f6"},
+    {file = "umadb-0.6.10-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:e765428c138f08774bc6e79d2213c0be26aef682659c7620326332ba9c990b5e"},
+    {file = "umadb-0.6.10-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:4514daee4c32f1f15904902652efe3893bdee74b2626d90fe460f936b8d56148"},
+    {file = "umadb-0.6.10-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:e390bcad8e00a79fff07a2996242cf9ca8ff964e3760aa7c21dce7d301f97a3a"},
+    {file = "umadb-0.6.10-cp310-abi3-win32.whl", hash = "sha256:0a26395f07d243b6ad5db1936d7cdde3128f538cbf02b97385ff75e0f2214ef7"},
+    {file = "umadb-0.6.10-cp310-abi3-win_amd64.whl", hash = "sha256:10d44de5604f5d2bec203031ca486979678f0786f95076cc038b6c1170d5fb29"},
+    {file = "umadb-0.6.10.tar.gz", hash = "sha256:66372325eab0f6918ba381653fca624b07439de5b4b032f5ce8afdfae487293f"},
 ]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11"
-content-hash = "9a992445a7e7ef7b421aa67a2945200c366b90f6813e4cd64caa638be2f514de"
+content-hash = "9c90bc5636edb30e6da6c019243483646863313d89aa40aca64276d974c69aab"

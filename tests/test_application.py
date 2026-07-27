@@ -3,6 +3,7 @@ import os
 from decimal import Decimal
 from uuid import uuid4
 
+import umadb
 from eventsourcing.domain import Aggregate
 from eventsourcing.tests.application import ExampleApplicationTestCase
 from eventsourcing.utils import get_topic
@@ -32,43 +33,59 @@ class TestApplicationWithUmaDb(ExampleApplicationTestCase):
     def super_test_example_application(self) -> None:
         from eventsourcing.tests.application import BankAccountsWithPydantic
 
-        app = BankAccountsWithPydantic(env={"IS_SNAPSHOTTING_ENABLED": "f"})
+        with BankAccountsWithPydantic(env={"IS_SNAPSHOTTING_ENABLED": "f"}) as app:
 
-        self.assertEqual(get_topic(type(app.factory)), self.expected_factory_topic)
+            self.assertEqual(get_topic(type(app.factory)), self.expected_factory_topic)
 
-        # Check AccountNotFound exception.
-        with self.assertRaises(BankAccountsWithPydantic.AccountNotFoundError):
-            app.get_account(str(uuid4()))
+            # Check AccountNotFound exception.
+            with self.assertRaises(BankAccountsWithPydantic.AccountNotFoundError):
+                app.get_account(str(uuid4()))
 
-        # Open an account.
-        account_id = app.open_account(
-            full_name="Alice",
-            email_address="alice@example.com",
-        )
+            # Open an account.
+            account_id = app.open_account(
+                full_name="Alice",
+                email_address="alice@example.com",
+            )
 
-        # Check balance.
-        self.assertEqual(
-            app.get_balance(account_id),
-            Decimal("0.00"),
-        )
+            # Check balance.
+            self.assertEqual(
+                app.get_balance(account_id),
+                Decimal("0.00"),
+            )
 
-        # Credit the account.
-        app.credit_account(account_id, Decimal("10.00"))
+            # Credit the account.
+            app.credit_account(account_id, Decimal("10.00"))
 
-        # Check balance.
-        self.assertEqual(
-            app.get_balance(account_id),
-            Decimal("10.00"),
-        )
+            # Check balance.
+            self.assertEqual(
+                app.get_balance(account_id),
+                Decimal("10.00"),
+            )
 
-        app.credit_account(account_id, Decimal("25.00"))
-        app.credit_account(account_id, Decimal("30.00"))
+            app.credit_account(account_id, Decimal("25.00"))
+            app.credit_account(account_id, Decimal("30.00"))
 
-        # Check balance.
-        self.assertEqual(
-            app.get_balance(account_id),
-            Decimal("65.00"),
-        )
+            # Check balance.
+            self.assertEqual(
+                app.get_balance(account_id),
+                Decimal("65.00"),
+            )
+
+            # Start and stop a subscription.
+            subscription1 = app.application_subscription()
+            subscription1.stop()
+            # Should convert CancelledByUserError into StopIteration.
+            with self.assertRaises(StopIteration):
+                next(subscription1)
+
+            # Start and don't stop a subscription.
+            subscription2 = app.application_subscription()
+            with self.assertRaises(StopIteration):
+                next(subscription1)
+
+        # Should get cancelled when client exits.
+        with self.assertRaises(umadb.CancelledByUserError):
+            next(subscription2)
 
         # TODO: Maybe reinstate this somehow?
         # section = app.notification_log["1,10"]

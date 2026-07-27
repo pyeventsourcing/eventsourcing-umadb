@@ -235,15 +235,22 @@ class UmaDbSubscription(Subscription[UmaDbApplicationRecorder]):
         topics: Sequence[str] = (),
     ) -> None:
         super().__init__(recorder=recorder, gt=gt, topics=topics)
-        self._read_response = recorder.umadb.subscribe(
+        self._subscription = recorder.umadb.subscribe(
             query=umadb.Query(items=[umadb.QueryItem(types=topics)]),
             after=gt,
         )
 
     def __next__(self) -> Notification:
-        if self._has_been_stopped:
-            raise StopIteration
-        return self._recorder.construct_notification(next(self._read_response))
+        try:
+            return self._recorder.construct_notification(next(self._subscription))
+        except umadb.CancelledByUserError:
+            if self._has_been_stopped:
+                raise StopIteration
+            raise
+
+    def stop(self) -> None:
+        super().stop()
+        self._subscription.cancel()
 
 
 class UmaDbDcbRecorder(DcbRecorder):

@@ -137,14 +137,14 @@ files = [
 
 [[package]]
 name = "eventsourcing"
-version = "10.0.0a3"
+version = "10.0.0a6"
 description = "Event sourcing in Python"
 optional = false
 python-versions = ">=3.11.0"
 groups = ["main", "dev"]
 files = [
-    {file = "eventsourcing-10.0.0a3-py3-none-any.whl", hash = "sha256:db86f2ac8e944cc8ddf21f92d3ffb7460102b7a10b9f9a9b1189d38dad53821e"},
-    {file = "eventsourcing-10.0.0a3.tar.gz", hash = "sha256:ecb9800451fdcaa4930c6f868e04d6dd829101e784a8912aa8807e20f086f856"},
+    {file = "eventsourcing-10.0.0a6-py3-none-any.whl", hash = "sha256:c6a9f06707e6c5402ef63f75d07f62e9acf120e5bf9f03d0e878529e5cd8124d"},
+    {file = "eventsourcing-10.0.0a6.tar.gz", hash = "sha256:06d221c30a3f195e666ab46558bdfa10230bebdf91d7c6e77c717894d65c8015"},
 ]
 
 [package.dependencies]

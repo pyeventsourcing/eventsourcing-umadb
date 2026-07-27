@@ -386,14 +386,24 @@ class UmaDbDcbSubscription(DcbSubscription[UmaDbDcbRecorder]):
         )
 
     def __next__(self) -> DcbSequencedEvent:
-        sequenced = next(self._subscription)
-        return DcbSequencedEvent(
-            position=sequenced.position,
-            event=DcbEvent(
-                type=sequenced.event.event_type,
-                data=sequenced.event.data,
-                tags=sequenced.event.tags,
-                uuid=sequenced.event.uuid or NIL_UUID,
-                metadata=sequenced.event.metadata,
-            ),
-        )
+        try:
+            sequenced = next(self._subscription)
+        except umadb.CancelledByUserError:
+            if self._has_been_stopped:
+                raise StopIteration
+            raise
+        else:
+            return DcbSequencedEvent(
+                position=sequenced.position,
+                event=DcbEvent(
+                    type=sequenced.event.event_type,
+                    data=sequenced.event.data,
+                    tags=sequenced.event.tags,
+                    uuid=sequenced.event.uuid or NIL_UUID,
+                    metadata=sequenced.event.metadata,
+                ),
+            )
+
+    def stop(self) -> None:
+        super().stop()
+        self._subscription.cancel()

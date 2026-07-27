@@ -36,18 +36,9 @@ class BaseUmaDbFactory(BaseInfrastructureFactory[TrackingRecorder]):
             )
         self.umadb = Client(url=uri)
 
-    def __enter__(self) -> Self:
-        self.umadb = self.umadb.__enter__()
-        return super().__enter__()
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> bool | None:
-        self.umadb.__exit__(exc_type, exc_val, exc_tb)
-        return super().__exit__(exc_type, exc_val, exc_tb)
+    def close(self) -> None:
+        self.umadb.close()
+        super().close()
 
     def __del__(self) -> None:
         if hasattr(self, "umadb"):

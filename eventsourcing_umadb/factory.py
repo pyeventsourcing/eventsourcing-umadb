@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from types import TracebackType
-from typing import Self, override
+from typing import override
 
 from eventsourcing.dcb.api import DcbRecorder
 from eventsourcing.dcb.persistence import DcbInfrastructureFactory

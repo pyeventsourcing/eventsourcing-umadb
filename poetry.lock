@@ -160,10 +160,10 @@ files = [
 
 [[package]]
 name = "eventsourcing"
-version = "10.0.0a7"
+version = "10.0.0a8"
 description = "Event sourcing in Python"
 optional = false
-python-versions = ">=3.11.0"
+python-versions = ">=3.12.0"
 groups = ["main", "dev"]
 files = []
 develop = true

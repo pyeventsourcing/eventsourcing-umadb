@@ -11,6 +11,8 @@ from umadb import (
     QueryItem,
 )
 
+from eventsourcing_umadb.server_fixture import temp_umadb_server
+
 
 class TestUmaDbClient(unittest.TestCase):
     def _generate_tagged_event(self, tag: str) -> Event:
@@ -52,4 +54,4 @@ class TestUmaDbClient(unittest.TestCase):
                 )
             duration = datetime.datetime.now() - start
             rate = num_per_iter / duration.total_seconds()
-            print(f"After {(i + 1) * num_per_iter:} events, rate: {rate:.0f} events/s")
+            print(f"After {(i + 1) * num_per_iter}: events, rate: {rate:.0f} events/s")

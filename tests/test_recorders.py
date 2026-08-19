@@ -7,7 +7,6 @@ from uuid import uuid4
 
 from eventsourcing.dcb.api import DcbEvent
 from eventsourcing.dcb.tests import DcbRecorderTestCase
-from eventsourcing.domain import datetime_now_with_tzinfo
 from eventsourcing.persistence import (
     AggregateRecorder,
     ApplicationRecorder,
@@ -18,6 +17,7 @@ from eventsourcing.tests.persistence import (
     AggregateRecorderTestCase,
     ApplicationRecorderTestCase,
 )
+from eventsourcing.timestamp import datetime_now_with_tzinfo
 from umadb import AppendCondition, Client, Event, Query, QueryItem
 
 from eventsourcing_umadb.recorders import (
@@ -124,11 +124,13 @@ class TestUmaDbAggregateRecorder(AggregateRecorderTestCase, WithUmaDb):
     #         )
 
 
-class TestUmaDbApplicationRecorder(ApplicationRecorderTestCase, WithUmaDb):
+class TestUmaDbApplicationRecorder(
+    ApplicationRecorderTestCase[UmaDbApplicationRecorder], WithUmaDb
+):
     INITIAL_VERSION = 0
     recorder_supports_idempotent_appends: ClassVar[bool] = True
 
-    def create_recorder(self) -> ApplicationRecorder:
+    def create_recorder(self) -> UmaDbApplicationRecorder:
         return UmaDbApplicationRecorder(umadb=self.umadb)
 
     def test_insert_select(self) -> None:
@@ -211,8 +213,8 @@ class TestUmaDbApplicationRecorder(ApplicationRecorderTestCase, WithUmaDb):
             state=b"state2",
         )
 
-        notification_ids = recorder.insert_events([stored_event1, stored_event2])
-        self.assertEqual(notification_ids, [start + 1, start + 2])
+        notification_id = recorder.insert_events([stored_event1, stored_event2])
+        self.assertEqual(notification_id, start + 2)
 
         # Store a third event.
         stored_event3 = StoredEvent(
@@ -221,8 +223,8 @@ class TestUmaDbApplicationRecorder(ApplicationRecorderTestCase, WithUmaDb):
             topic="topic3",
             state=b"state3",
         )
-        notification_ids = recorder.insert_events([stored_event3])
-        self.assertEqual(notification_ids, [start + 3])
+        notification_id = recorder.insert_events([stored_event3])
+        self.assertEqual(notification_id, start + 3)
 
         stored_events1 = recorder.select_events(originator_id1)
         stored_events2 = recorder.select_events(originator_id2)

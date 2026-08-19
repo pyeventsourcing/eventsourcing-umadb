@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from types import TracebackType
-from typing import Self
+from typing import Self, override
 
 from eventsourcing.dcb.api import DcbRecorder
 from eventsourcing.dcb.persistence import DcbInfrastructureFactory
@@ -22,7 +22,7 @@ from eventsourcing_umadb.recorders import (
 )
 
 
-class BaseUmaDbFactory(BaseInfrastructureFactory[TrackingRecorder]):
+class BaseUmaDbFactory(BaseInfrastructureFactory):
     UMADB_URI = "UMADB_URI"
 
     def __init__(self, env: Environment):
@@ -36,11 +36,13 @@ class BaseUmaDbFactory(BaseInfrastructureFactory[TrackingRecorder]):
             )
         self.umadb = Client(url=uri)
 
+    @override
     def close(self) -> None:
         self.umadb.close()
-        super().close()
 
+    @override
     def __del__(self) -> None:
+        super().__del__()
         if hasattr(self, "umadb"):
             del self.umadb
 
@@ -77,6 +79,6 @@ class Factory(BaseUmaDbFactory, InfrastructureFactory[TrackingRecorder]):
         raise NotImplementedError()
 
 
-class DcbFactory(BaseUmaDbFactory, DcbInfrastructureFactory[TrackingRecorder]):
+class DcbFactory(BaseUmaDbFactory, DcbInfrastructureFactory):
     def dcb_recorder(self) -> DcbRecorder:
         return UmaDbDcbRecorder(self.umadb)

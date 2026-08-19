@@ -6,6 +6,8 @@ from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
 from unittest.case import TestCase
 
+from eventsourcing_umadb.server_fixture import temp_umadb_server
+
 BASE_DIR = Path(__file__).parents[1]
 
 
@@ -121,6 +123,7 @@ class TestDocs(TestCase):
                         num_code_lines += 1
                 else:
                     line = ""
+
                 lines.append(line)
                 last_line = orig_line
 

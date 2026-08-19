@@ -3,13 +3,16 @@ import time
 from typing import Any, Dict
 from unittest import TestCase
 
-from eventsourcing.domain import TaggedEvent, TEnvelope, event
+from eventsourcing.decorator import event
+from eventsourcing.domain import TaggedEvent
 from eventsourcing.persistence import Tracking
 from eventsourcing.popo import POPOTrackingRecorder
-from eventsourcing.projection import Projection, ProjectionRunner
+from eventsourcing.projection import EventProcessor, ProjectionRunner
 from eventsourcing.pydantic import DcbApplication, Decision, EnduringObject
 from eventsourcing.utils import get_topic
 from umadb import CancelledByUserError
+
+from eventsourcing_umadb.server_fixture import temp_umadb_server
 
 
 class TrainingSchool(DcbApplication):
@@ -91,18 +94,20 @@ class TestDcbApplication(TestCase):
         class MyView(POPOTrackingRecorder):
             pass
 
-        class MyProjection(Projection[MyView, TaggedEvent[Decision]]):
+        class MyProjection(EventProcessor[TaggedEvent[Decision], MyView]):
             name = "projection"
             topics = [get_topic(Dog.TrickAdded)]
 
-            def process_event(self, envelope: TEnvelope, tracking: Tracking) -> None:
+            def process_event(
+                self, envelope: TaggedEvent[Decision], tracking: Tracking
+            ) -> None:
                 projection_is_running.set()
                 # Just return to other threads so this test isn't delayed.
                 time.sleep(0.01)
 
         runner = ProjectionRunner(
             application_class=TrainingSchool,
-            projection_class=MyProjection,
+            event_processor_class=MyProjection,
             view_class=MyView,
             env=self.dog_school_env,
         )

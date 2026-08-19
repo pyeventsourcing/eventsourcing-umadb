@@ -18,10 +18,10 @@ from eventsourcing.domain import NIL_UUID
 from eventsourcing.persistence import (
     AggregateRecorder,
     ApplicationRecorder,
+    ApplicationRecorderSubscription,
     IntegrityError,
     Notification,
     StoredEvent,
-    Subscription,
 )
 
 
@@ -41,13 +41,13 @@ class UmaDbAggregateRecorder(AggregateRecorder):
 
     def insert_events(
         self, stored_events: Sequence[StoredEvent], **kwargs: Any
-    ) -> Optional[Sequence[int]]:
+    ) -> int | None:
         self._insert_events(stored_events, **kwargs)
         return None
 
     def _insert_events(
         self, stored_events: Sequence[StoredEvent], **kwargs: Any
-    ) -> Optional[Sequence[int]]:
+    ) -> int | None:
         # print("Inserting events")
         # for stored_event in stored_events:
         #     print(" - {}, {}".format(stored_event.originator_id, stored_event.originator_version))
@@ -99,9 +99,7 @@ class UmaDbAggregateRecorder(AggregateRecorder):
         except umadb.IntegrityError as e:
             raise IntegrityError(e) from e
         else:
-            return list(
-                range(sequence_number - len(stored_events) + 1, sequence_number + 1)
-            )
+            return sequence_number
 
     def _tag_originator_id(self, originator_id: UUID | str) -> str:
         return f"originator:{originator_id}"
@@ -175,7 +173,7 @@ class UmaDbApplicationRecorder(UmaDbAggregateRecorder, ApplicationRecorder):
 
     def insert_events(
         self, stored_events: Sequence[StoredEvent], **kwargs: Any
-    ) -> Optional[Sequence[int]]:
+    ) -> int | None:
         return self._insert_events(stored_events, **kwargs)
 
     def select_notifications(
@@ -219,7 +217,7 @@ class UmaDbApplicationRecorder(UmaDbAggregateRecorder, ApplicationRecorder):
 
     def subscribe(
         self, gt: int | None = None, topics: Sequence[str] = ()
-    ) -> Subscription[UmaDbApplicationRecorder]:
+    ) -> ApplicationRecorderSubscription[UmaDbApplicationRecorder]:
         return UmaDbSubscription(
             recorder=self,
             gt=gt,
@@ -227,7 +225,7 @@ class UmaDbApplicationRecorder(UmaDbAggregateRecorder, ApplicationRecorder):
         )
 
 
-class UmaDbSubscription(Subscription[UmaDbApplicationRecorder]):
+class UmaDbSubscription(ApplicationRecorderSubscription[UmaDbApplicationRecorder]):
     def __init__(
         self,
         recorder: UmaDbApplicationRecorder,

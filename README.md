@@ -25,7 +25,7 @@ Use the `eventsourcing.dcb` package to define a DCB application. Read the [docs]
 from typing import TypedDict
 from uuid import uuid4
 
-from eventsourcing.domain import triggers
+from eventsourcing.decorator import triggers
 from eventsourcing.pydantic import DcbApplication, Decision, EnduringObject
 
 

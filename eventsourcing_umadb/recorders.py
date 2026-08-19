@@ -74,7 +74,7 @@ class UmaDBAggregateRecorder(AggregateRecorder):
                 event_type=stored_event.topic,
                 data=stored_event.state,
                 tags=[originator_id_tag, originator_version_tag],
-                uuid=uuid4()
+                uuid=uuid4(),
             )
             umadb_events.append(umadb_event)
         try:

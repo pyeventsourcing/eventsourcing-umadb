@@ -74,11 +74,7 @@ class UmaDBAggregateRecorder(AggregateRecorder):
                 event_type=stored_event.topic,
                 data=stored_event.state,
                 tags=[originator_id_tag, originator_version_tag],
-                uuid=(
-                    str(stored_event.event_id)
-                    if stored_event.event_id
-                    else str(uuid4())
-                ),
+                uuid=uuid4()
             )
             umadb_events.append(umadb_event)
         try:
@@ -154,7 +150,6 @@ class UmaDBAggregateRecorder(AggregateRecorder):
                     originator_version=extracted_originator_version,
                     topic=ue.event.event_type,
                     state=ue.event.data,
-                    event_id=UUID(ue.event.uuid) if ue.event.uuid else None,
                 )
             )
         return stored_events
@@ -214,7 +209,6 @@ class UmaDBApplicationRecorder(UmaDBAggregateRecorder, ApplicationRecorder):
             originator_version=self._extract_originator_version(ue),
             topic=ue.event.event_type,
             state=ue.event.data,
-            event_id=UUID(ue.event.uuid) if ue.event.uuid else None,
         )
 
     def subscribe(
@@ -235,10 +229,9 @@ class UmaDBSubscription(Subscription[UmaDBApplicationRecorder]):
         topics: Sequence[str] = (),
     ) -> None:
         super().__init__(recorder=recorder, gt=gt, topics=topics)
-        self._read_response = recorder.umadb.read(
+        self._read_response = recorder.umadb.subscribe(
             query=umadb.Query(items=[umadb.QueryItem(types=topics)]),
-            start=gt + 1 if isinstance(gt, int) else None,
-            subscribe=True,
+            after=gt if isinstance(gt, int) else None,
         )
 
     def __next__(self) -> Notification:
@@ -261,7 +254,7 @@ class UmaDBDCBRecorder(DCBRecorder):
                         event_type=e.type,
                         data=e.data,
                         tags=e.tags,
-                        uuid=e.uuid if e.uuid else str(uuid4()),
+                        uuid=uuid4(),
                     )
                     for e in events
                 ],
@@ -340,7 +333,6 @@ class UmaDBDCBReadResponse(DCBReadResponse):
                 type=sequenced_event.event.event_type,
                 data=sequenced_event.event.data,
                 tags=sequenced_event.event.tags,
-                uuid=sequenced_event.event.uuid,
             ),
         )
 
@@ -382,6 +374,5 @@ class UmaDBDCBSubscription(DCBSubscription[UmaDBDCBRecorder]):
                 type=sequenced_event.event.event_type,
                 data=sequenced_event.event.data,
                 tags=sequenced_event.event.tags,
-                uuid=sequenced_event.event.uuid,
             ),
         )

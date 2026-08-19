@@ -48,7 +48,6 @@ class TestUmaDBAggregateRecorder(AggregateRecorderTestCase, WithUmaDB):
             originator_version=self.INITIAL_VERSION,
             topic="topic1",
             state=b"state1",
-            event_id=uuid4(),
         )
 
         recorder.insert_events([event1])
@@ -59,7 +58,6 @@ class TestUmaDBAggregateRecorder(AggregateRecorderTestCase, WithUmaDB):
             selected_events,
             [event1],
         )
-        self.assertEqual(selected_events[0].event_id, event1.event_id)
 
     def test_performance(self) -> None:
         super().test_performance()
@@ -143,7 +141,6 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase, WithUmaDB):
             originator_version=self.INITIAL_VERSION,
             topic="topic1",
             state=b"state1",
-            event_id=uuid4(),
         )
 
         recorder.insert_events([event1])
@@ -154,14 +151,12 @@ class TestUmaDBApplicationRecorder(ApplicationRecorderTestCase, WithUmaDB):
             selected_events,
             [event1],
         )
-        self.assertEqual(selected_events[0].event_id, event1.event_id)
 
         notifications = recorder.select_notifications(
             start=recorder.max_notification_id(), limit=1
         )
         self.assertEqual(len(notifications), 1)
         self.assert_events_eq(notifications, [event1])
-        self.assertEqual(notifications[0].event_id, event1.event_id)
 
     def super_test_insert_select(
         self, start_notification_id: int | None = None
@@ -411,14 +406,13 @@ class TestUmaDBDCBRecorder(DCBRecorderTestCase, WithUmaDB):
         initial_position = recorder.umadb.head()
 
         # Append one event.
-        event1 = DCBEvent(type="type1", data=b"data1", tags=["tagX"], uuid=str(uuid4()))
+        event1 = DCBEvent(type="type1", data=b"data1", tags=["tagX"])
         recorder.append(events=[event1])
 
         # Read all, expect one event.
         read_response = recorder.read(after=initial_position)
         result = list(read_response)
         self.assertEqual(1, len(result))
-        self.assertEqual(event1.uuid, result[0].event.uuid)
 
     def test_append_subscribe(self) -> None:
         recorder = UmaDBDCBRecorder(self.umadb)
@@ -429,13 +423,12 @@ class TestUmaDBDCBRecorder(DCBRecorderTestCase, WithUmaDB):
         initial_position = recorder.umadb.head()
 
         # Append one event.
-        event1 = DCBEvent(type="type1", data=b"data1", tags=["tagX"], uuid=str(uuid4()))
+        event1 = DCBEvent(type="type1", data=b"data1", tags=["tagX"])
         recorder.append(events=[event1])
 
         # Start subscription.
         with recorder.subscribe(after=initial_position) as subscription:
             received = next(subscription)
-        self.assertEqual(event1.uuid, received.event.uuid)
 
 
 del AggregateRecorderTestCase

@@ -165,12 +165,14 @@ description = "Event sourcing in Python"
 optional = false
 python-versions = ">=3.12.0"
 groups = ["main", "dev"]
-files = []
-develop = true
+files = [
+    {file = "eventsourcing-10.0.0a8-py3-none-any.whl", hash = "sha256:8873c4e8e70a3b988a1b578a728a0321ceccb4361c3454f850af4c3b65974406"},
+    {file = "eventsourcing-10.0.0a8.tar.gz", hash = "sha256:f318b840028cea1ab1ccd7a48e2599025abdb6c43e80a2c12c7894e6b42cf226"},
+]
 
 [package.dependencies]
-pycryptodome = {version = ">=3.22", optional = true}
-pydantic = {version = ">=2.13.4", optional = true}
+pycryptodome = {version = ">=3.22", optional = true, markers = "extra == \"crypto\""}
+pydantic = {version = ">=2.13.4", optional = true, markers = "extra == \"pydantic\""}
 typing_extensions = "*"
 
 [package.extras]
@@ -180,10 +182,6 @@ msgspec = ["msgspec (>=0.21.1)"]
 postgres = ["psycopg[pool] (>=3.2)"]
 pydantic = ["pydantic (>=2.13.4)"]
 umadb = ["eventsourcing-umadb (>=0.4.0)"]
-
-[package.source]
-type = "directory"
-url = "../eventsourcing"
 
 [[package]]
 name = "isort"
@@ -845,22 +843,22 @@ typing-extensions = ">=4.15.0"
 
 [[package]]
 name = "umadb"
-version = "0.7.7"
+version = "0.7.8"
 description = "Python client for UmaDB event store"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "umadb-0.7.7-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:7be6a94137ca7e56be251347eac804e8fcb6d30cdfd3c278adbe2b2027bc5909"},
-    {file = "umadb-0.7.7-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:7dae0dac918f90c4d49ccde97a24fcd04ec2148a90a4119b97ea21dbd41e6667"},
-    {file = "umadb-0.7.7-cp310-abi3-manylinux_2_34_aarch64.whl", hash = "sha256:c1f5c84fa36e545814ba4017c0eb9bba0bd55c90690dfc41fca3ccef036a1f9f"},
-    {file = "umadb-0.7.7-cp310-abi3-manylinux_2_34_x86_64.whl", hash = "sha256:ecc5cfbba57217dc52b2a71acc25e062674136136800fb64cdb8dec4e11539f9"},
-    {file = "umadb-0.7.7-cp310-abi3-win32.whl", hash = "sha256:b92fef70af684fd0b0d1abcb6ed23222bd2fb3a3a4a0e08b7f2393913abf7ad1"},
-    {file = "umadb-0.7.7-cp310-abi3-win_amd64.whl", hash = "sha256:ee430604f5bea6268e697e3342b7f218f538d9facd1da9fc3ae79d2d76f81819"},
-    {file = "umadb-0.7.7.tar.gz", hash = "sha256:180e7818ca4655479a77ae92fa81ba81a1abfd2fcae22e5f17090674d88959f8"},
+    {file = "umadb-0.7.8-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:9dbd839a22478215749931ef71099d8d21ad58850d47e1430a8f82fcb3c1cd27"},
+    {file = "umadb-0.7.8-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:2a0762ee7645af12030aec1e965787ade25676493c2bf2018dbeb38c552a4978"},
+    {file = "umadb-0.7.8-cp310-abi3-manylinux_2_34_aarch64.whl", hash = "sha256:fea90149a6fdd474c369a8efe45cd861bce2f1478d0048f0f20b1ccb9a76eb15"},
+    {file = "umadb-0.7.8-cp310-abi3-manylinux_2_34_x86_64.whl", hash = "sha256:dd0ba1edfb0c692234804a4b04cf70908bb48a337318a4c6c7a6ef9edb31fbc0"},
+    {file = "umadb-0.7.8-cp310-abi3-win32.whl", hash = "sha256:87192d507fe66cb19fd1858101bc34df3607c6f929b7abeb8a62fd8a36f54c8a"},
+    {file = "umadb-0.7.8-cp310-abi3-win_amd64.whl", hash = "sha256:af94f680ebd2562223de45957d999601aff0a4128734a0ab3a251769a3d49677"},
+    {file = "umadb-0.7.8.tar.gz", hash = "sha256:fd5d7c74a7504b395f33161e78aba36c7f681b010b447ba72ea5e6550a7cc49c"},
 ]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "a61bdefaaed5babe4b4e01874d14033b2948d6ee0ecda9b7228994e7abfdefd3"
+content-hash = "cedc6ae102a17ea07aaa75c6ec8de9bb87602c03db3bf825b0257895a07fc638"
